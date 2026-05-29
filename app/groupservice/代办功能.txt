@@ -1,0 +1,40 @@
+总体：
+1. xx 拉取群、私聊ID：传入userID，只返回私聊和群聊的ID
+
+群聊：
+    1. xx 创建群聊：传入userID，groupName,默认为群主身份，返回GroupID
+    2. xx 获取群信息：传入groupID,返回model.GroupInfo
+    3. xx 更改群信息：确保为管理员往上，groupInfo.userID,向其他管理层广播
+    4. xx 搜索群，不支持模糊搜索：传入groupName，返回groupID
+    5. xx 提交申请：传入userID,groupID,向groupapply中添加，gateway发送广播通知，userID
+    6. xx 拉取申请：传入userID,groupID，确保是管理员往上，返回applyUserID
+    7. xx 加入群：鉴权，至少为管理员才能通过批准，传入userID,goalUserID，向群广播
+    8.    拒绝加入群：
+    9. xx 退出群聊：传入userID,groupID,群主不能退出，向群成员广播
+    10. xx 踢出群聊：传入userID,groupID,goalUserID,不能踢自己，只能踢权限比自己低的，发送群通知和被提出的人的系统通知
+    11.xx 转让群主：确保是群主，先升后降，避免出现无群主现象，userID，goalUserID
+    12.xx 设置管理员：确保是群主或管理员，传groupID,userID(goalUser),向群成员广播
+    13.xx 撤销管理员：同上
+    14.xx 解散群：确保是群主，以groupID为key删除，向成员广播，userID，groupID
+    15.xx 获取群的个人信息：传入userID,groupID，返回groupWithUserInfo
+    16.xx 修改群备注信息：传入userID,groupID以及相关，无返回
+    17.xx 是否已读：groupID,userID,返回除自己的last_visit_time(time.Time.String())
+    18.xx 查看是否是群成员，传userID,groupID,返回bool以及群里面的权限（在dao层添加OnlyGetExist方法，如果为true则走redis缓存路线，false还是正常mysql，另外Add和Update默认更新redis字段）
+私聊：
+    1. xx 加好友/创建私聊：无特殊要求，向goalUserID发送消息，传入userID,goalUserID
+    2. xx 删除好友：无特殊要求，传goalUserID,sessionID,向对方发送通知
+    3. xx 申请好友：传入userID,goalUserID,向groupapply中添加，通知对方
+    4. xx 拉取好友请求：传入userID，返回applyUserID
+    5. xx 拒绝好友：传入userID，goalUserID,直接从groupApply中删除
+    6. xx 获取好友查看的时间：传入userID(好友的),sessionID,返回time.Time.String
+    7. oo 获取会话信息，如背景等：当前无额外字段，暂时不用
+    8.    查看是否是好友，返回bool，直接整体加入redis缓存层，不用额外字段判断是否查redis
+禁言：
+    1：   完成mute的dao层
+
+messageService后：
+    group:1：（禁言）至少管理员，传入goalUserID,muteReason,muteTime（时长），群广播
+          2：（解除禁言）至少管理员，传入goalUserID，群广播
+优化mute的缓存设置，缓存不管是读到空值还是真实值一律返回true，只有没查到才false
+
+## 删除群聊私聊时调messageservice.DeleteMessageAllGroup删除聊天记录 ##

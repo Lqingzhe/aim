@@ -1,0 +1,34 @@
+common_config:
+  service: "file-service"
+  equip_id: 5
+  service_info: {}
+  nacos_config:
+    host: "localhost"
+    port: 8848
+
+
+service_config:
+  timeout: 10s
+  host: "localhost"
+  port: 8892
+
+file_config:
+  file_storage_path: "/var/data"
+  max_picture_day: 30
+  max_voice_keep_day: 30
+  max_file_keep_day: 7
+  max_file_keep_size: 1073741824
+  max_voice_time_second: 60
+
+mysql_config:
+  username: "root"
+  password: "123456"
+  host: "localhost"
+  port: 3306
+  dbname: "aim_file"
+  set_max_idle_conns: 10
+  set_max_open_conns: 100
+  set_conn_max_lifetime: 3600s
+  timeout: 10s
+  read_timeout: 30s
+  write_timeout: 30s

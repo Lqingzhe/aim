@@ -1,0 +1,12 @@
+1：   获取文件信息，传入FileID,先查mysql获取storagePath,再根据storagePath获取数据流，返回数据流，FileID，FileName，FileType（如果storagePath不存在则从mysql中再删除）
+2：   储存文件信息，传入数据流，FileType,生成FileID储存并返回storagePath，再存mysql，如果挂了则再删除File，优先返回OsErr,返回FileID，FileType
+3：   删除文件信息，传入FileID，删除文件再删除mysql
+4：   获取语音信息，传入FileID,先查mysql获取storagePath,再根据storagePath获取数据流，返回数据流，FileID,语音时长，FileType
+5：   储存语音信息,同上见第二行，但是需要传入语音时长
+6：   删除语音信息，同上见第三行
+7：   获取图片信息，传入FileID,先查mysql获取storagePath,再根据storagePath获取数据流，返回数据流，FileID,FileType
+8：   储存图片信息，同上见第二行
+9：   删除图片信息，同上见第三行
+
+other：
+    storagePath采用/data/aim-files/years/months/days/fileID.fileType的格式

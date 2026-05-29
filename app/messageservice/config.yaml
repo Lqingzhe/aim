@@ -1,0 +1,55 @@
+common_config:
+  service: "message-service"
+  equip_id: 4
+  service_info:
+    group_service:
+      kitex_time_out: 5s
+    file_service:
+      kitex_time_out: 5s
+  nacos_config:
+    host: "localhost"
+    port: 8848
+
+
+service_config:
+  timeout: 10s
+  host: "localhost"
+  port: 8891
+
+message_config:
+  max_message_byte_length: 5000
+  max_group_notice_length: 500
+  max_file_byte_length: 10485760
+  max_voice_time_second: 60
+
+kafka_config:
+  broker:
+    - "localhost:9092"
+
+mysql_config:
+  username: "root"
+  password: "123456"
+  host: "localhost"
+  port: 3306
+  dbname: "aim_message"
+  set_max_idle_conns: 10
+  set_max_open_conns: 100
+  set_conn_max_lifetime: 3600s
+  timeout: 10s
+  read_timeout: 30s
+  write_timeout: 30s
+
+mongo_db_config:
+  url: "mongodb://localhost:27017"
+
+redis_config:
+  addr: "localhost:6379"
+  password: "123456"
+  pool_size: 100
+  min_idle_conns: 10
+  max_idle_conns: 50
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
+  conn_max_lifetime: 3600s
+  conn_max_idle_time: 600s
