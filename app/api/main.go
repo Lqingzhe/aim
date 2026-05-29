@@ -22,8 +22,8 @@ import (
 
 func main() {
 	Config := config.InitConfig()
-
-	log.Printf("main:%s\n", Config.CommonConfig)
+	//
+	//log.Printf("main:%s\n", Config.CommonConfig)
 	log.Printf("main:%#v\n", Config.CommonConfig.KafkaConfig.Broker)
 	log.Printf("main:%v\n", len(Config.CommonConfig.KafkaConfig.Broker))
 
