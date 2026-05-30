@@ -10,7 +10,7 @@ func setMysql(ctx context.Context, dbContext *model.DBContext, info *NickNameInf
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:SetMysql")
-	result := dbContext.Mysql.Client.WithContext(ctx).Create(info.RemarkInfo)
+	result := dbContext.Mysql.Client.WithContext(ctx).Create(&info.RemarkInfo)
 	if err2 := newerror.IsMysqlError(result); err2 != nil {
 		return err2
 	}
@@ -20,7 +20,7 @@ func getMysql(ctx context.Context, dbContext *model.DBContext, info *NickNameInf
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:GetMysql")
-	result := dbContext.Mysql.Client.WithContext(ctx).Model(&model.RemarkInfo{}).Where("user_id = ?", info.RemarkInfo.UserID).Find(info.Info)
+	result := dbContext.Mysql.Client.WithContext(ctx).Model(&model.RemarkInfo{}).Where("user_id = ?", info.RemarkInfo.UserID).Find(&info.Info)
 	if result.Error == nil && len(info.Info) == 0 {
 		return false, nil
 	}

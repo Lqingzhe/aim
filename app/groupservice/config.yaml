@@ -4,15 +4,18 @@ common_config:
   service_info:
     message_service:
       kitex_time_out: 5s
+    user_service:
+      kitex_time_out: 5s
   nacos_config:
-    host: "localhost"
+    host: "127.0.0.1"
     port: 8848
 
 
 service_config:
   timeout: 10s
-  host: "localhost"
-  port: 8890
+  service_addr:
+    host: "127.0.0.1"
+    port: 8890
 
 group_config:
   max_group_name_length: 50
@@ -22,12 +25,12 @@ group_config:
 
 kafka_config:
   broker:
-    - "localhost:9092"
+    - "127.0.0.1:9092"
 
 mysql_config:
   username: "root"
   password: "123456"
-  host: "localhost"
+  host: "127.0.0.1"
   port: 3306
   dbname: "aim_group"
   set_max_idle_conns: 10
@@ -38,7 +41,7 @@ mysql_config:
   write_timeout: 30s
 
 redis_config:
-  addr: "localhost:6379"
+  addr: "127.0.0.1:6379"
   password: "123456"
   pool_size: 100
   min_idle_conns: 10

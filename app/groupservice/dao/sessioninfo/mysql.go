@@ -27,7 +27,7 @@ func setMysql(ctx context.Context, dbContext *model.DBContext, info *SessionInfo
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:setMysql")
-	result := dbContext.Mysql.Client.WithContext(ctx).Create(info.SessionInfo)
+	result := dbContext.Mysql.Client.WithContext(ctx).Create(&info.SessionInfo)
 
 	if result.Error != nil {
 		if isContext, err2 := newerror.IsContextError(err); isContext {
@@ -44,7 +44,7 @@ func getMysql(ctx context.Context, dbContext *model.DBContext, info *SessionInfo
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:GetMysql")
-	result := addWhereInfo(dbContext.Mysql.Client.WithContext(ctx).Model(&model.SessionInfo{}), info).Find(info.Info)
+	result := addWhereInfo(dbContext.Mysql.Client.WithContext(ctx).Model(&model.SessionInfo{}), info).Find(&info.Info)
 	if result.Error == nil && len(info.Info) == 0 {
 		return false, nil
 	}

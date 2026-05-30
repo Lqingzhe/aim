@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/bytedance/sonic"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -18,14 +19,14 @@ const (
 )
 
 type Error struct {
-	HttpCode    int
-	HttpMessage string
+	HttpCode    int    `json:"http_code"`
+	HttpMessage string `json:"http_message"`
 
-	StatusCode ErrorStatue
-	LogMessage error
-	LogLevel   zapcore.Level
+	StatusCode ErrorStatue   `json:"status_code"`
+	LogMessage error         `json:"log_message"`
+	LogLevel   zapcore.Level `json:"log_level"`
 
-	IsNeedInterrupt bool
+	IsNeedInterrupt bool `json:"is_need_interrupt"`
 }
 type Option struct {
 	id        uint64
@@ -34,6 +35,22 @@ type Option struct {
 }
 type operate func(*Error)
 
+func (e *Error) MarshalError() error {
+	if e == nil {
+		return nil
+	}
+	return fmt.Errorf(`{"http_code":%d,"http_message":"%s","status_code":%d,"log_level":%d,"log_message":"%s","is_need_interrupt":%t}`, e.HttpCode, e.HttpMessage, e.StatusCode, e.LogLevel, e.LogMessage, e.IsNeedInterrupt)
+}
+func UnMarshalError(err error) error {
+	if err == nil {
+		return nil
+	}
+	err2 := &Error{}
+	if err3 := sonic.Unmarshal([]byte(err.Error()), err2); err3 != nil {
+		return MakeError(http.StatusInternalServerError, CodeInternalError, "Unmarshal Error Failed", fmt.Errorf("%s : %s", `raw error:`, err.Error()), LevelFatal).AddErrorTrace("error:Unmarshal Error").(*Error)
+	}
+	return err2
+}
 func WithContinueError(err *Error) {
 	err.IsNeedInterrupt = false
 }
@@ -71,24 +88,23 @@ func TranslateError(err error) *Error {
 	var err2 *Error
 	err2, ok := errors.AsType[*Error](err)
 	if !ok {
-		return MakeError(http.StatusInternalServerError, CodeInternalError, "Type Assertion Error", fmt.Errorf("%s%w", `Type Assertion To "*newerror.Error" Error`, err), LevelFatal).AddErrorTrace("error:TranslateError")
+		return MakeError(http.StatusInternalServerError, CodeInternalError, "Type Assertion Error", fmt.Errorf("%s%w", `Type Assertion To "*newerror.Error" Error`, err), LevelFatal).AddErrorTrace("error:TranslateError").(*Error)
 	}
 	return err2
 }
 func WhetherInterrupt(err error, finalErr *error) bool {
 	e := TranslateError(err)
-	if e.IsNeedInterrupt {
-		return true
-	} else {
-		*finalErr = err
+	if e == nil {
 		return false
 	}
+	*finalErr = e
+	return e.IsNeedInterrupt
 }
-func (e *Error) AddErrorTrace(trace string) *Error {
+func (e *Error) AddErrorTrace(trace string) error {
 	if e == nil {
 		return nil
 	}
-	e.LogMessage = fmt.Errorf(" %s / %w ", trace, e.LogMessage)
+	e.LogMessage = fmt.Errorf(" %s /%w ", trace, e.LogMessage)
 	return e
 }
 func (o *Option) OptionInfo() (uint64, string, string) {

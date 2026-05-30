@@ -4,10 +4,14 @@ import (
 	"aim/app/fileservice/service"
 	"aim/commonmodel"
 	"aim/kitex_gen/kitexfileservice"
+	newerror "aim/pkg/error"
 	"context"
 )
 
 func (s *KitexFileServiceImpl) CreateFile(ctx context.Context, req *kitexfileservice.CreateFileReq) (resp *kitexfileservice.CreateFileResp, err error) {
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
 	serviceStruct := service.NewFileService(s.snowFlake, s.dbContext, s.fileConfig)
 	fileID, err := serviceStruct.CreateFile(ctx, req.FileName, req.DataStream, commonmodel.FileType(req.FileType), req.ContentType, req.VoiceDurationTimeSecond)
 	if err != nil {
@@ -20,6 +24,9 @@ func (s *KitexFileServiceImpl) CreateFile(ctx context.Context, req *kitexfileser
 }
 
 func (s *KitexFileServiceImpl) DeleteFile(ctx context.Context, req *kitexfileservice.DeleteFileReq) (resp *kitexfileservice.DeleteFileResp, err error) {
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
 	serviceStruct := service.NewFileService(s.snowFlake, s.dbContext, s.fileConfig)
 	err = serviceStruct.DeleteFile(ctx, req.FileId)
 	if err != nil {
@@ -29,6 +36,9 @@ func (s *KitexFileServiceImpl) DeleteFile(ctx context.Context, req *kitexfileser
 }
 
 func (s *KitexFileServiceImpl) GetFile(ctx context.Context, req *kitexfileservice.GetFileReq) (resp *kitexfileservice.GetFileResp, err error) {
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
 	serviceStruct := service.NewFileService(s.snowFlake, s.dbContext, s.fileConfig)
 	dataStream, contentType, err := serviceStruct.GetFile(ctx, req.FileId)
 	if err != nil {

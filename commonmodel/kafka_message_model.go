@@ -3,7 +3,7 @@ package commonmodel
 type KafkaGroupNotice struct {
 	TraceID        string         `json:"trace_id"`
 	GoalUserID     []int64        `json:"goal_user_id"`
-	SessionID      int64          `json:"group_id"`
+	SessionID      int64          `json:"group_id,string"`
 	SendTimeSecond int64          `json:"send_time_second"`
 	Data           map[string]any `json:"data"`
 	MessageType    MessageType    `json:"message_type"`
@@ -13,7 +13,7 @@ type KafkaGroupNotice struct {
 type KafkaNewMessageNotice struct {
 	TraceID        string      `json:"trace_id"`
 	GoalUserID     []int64     `json:"goal_user_id"`
-	SessionID      int64       `json:"group_id"`
+	SessionID      int64       `json:"group_id,string"`
 	SendTimeSecond int64       `json:"send_time_second"`
 	MessageType    MessageType `json:"message_type"`
 	MessageCode    MessageCode `json:"message_code"`

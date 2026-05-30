@@ -10,11 +10,14 @@ import (
 )
 
 func (s *UserServiceImpl) Register(ctx context.Context, req *kitexuserservice.RegisterReq) (resp *kitexuserservice.RegisterResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewLoginInfo(s.DBContext, &model.UserLoginInfo{Password: req.Password}, nil)
 	userID, err := serviceStruct.Register(ctx, s.UserConfig, s.SnowNode)
 	if err != nil {
-		err2 := newerror.TranslateError(err).AddErrorTrace("login:Register")
+		err2 := newerror.TranslateError(err)
 		newlog.AddError(logger, err, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "Register")
 		return nil, err2
@@ -26,14 +29,17 @@ func (s *UserServiceImpl) Register(ctx context.Context, req *kitexuserservice.Re
 
 // Login implements the UserServiceImpl interface.
 func (s *UserServiceImpl) Login(ctx context.Context, req *kitexuserservice.LoginReq) (resp *kitexuserservice.LoginResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewLoginInfo(s.DBContext, &model.UserLoginInfo{
 		UserID:   req.UserId,
 		Password: req.Password,
 	}, nil)
 	err = serviceStruct.Login(ctx)
 	if err != nil {
-		err2 := newerror.TranslateError(err).AddErrorTrace("login:Login")
+		err2 := newerror.TranslateError(err)
 		newlog.AddError(logger, err, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "Login")
 		return nil, err2

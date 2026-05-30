@@ -1,5 +1,7 @@
 package api
 
+//2060391348787224576
+//2060656008488820736
 import (
 	"aim/app/api/handler"
 	"aim/app/api/middleware"
@@ -51,17 +53,23 @@ func (A *ApiConfig) Begin(port string) {
 	g.MaxMultipartMemory = 10 << 20
 	g.Use(gin.Recovery())
 
-	g.Use(middleware.Log(A.logger, A.equipID))
+	g.Use(middleware.Log(A.logger), middleware.Cors())
 
-	g.POST("ping", handlerConfig.Ping) //测试
+	g.LoadHTMLGlob("templates/*.html")
+	g.Static("/static", "./static")
+	g.GET("/", handlerConfig.IndexPage)
+	g.GET("/login", handlerConfig.LoginPage)
 
+	g.GET("/ping", handlerConfig.Ping) //测试
+
+	g.GET("/ws", middleware.SetTimeOut(A.RoutTimeOut["/ws"]), handlerConfig.ConnectWebsocket)
 	needLogin := g.Group("")
 	needLogin.Use(
 		middleware.AnalyseToken(A.tokenConfig, A.dbContext),
 		middleware.Limiter(A.dbContext, A.limiterConfig),
 	)
+	g.GET("/chat", handlerConfig.ChatPage)
 	{
-		needLogin.GET("/ws", middleware.SetTimeOut(A.RoutTimeOut["/ws"]), handlerConfig.ConnectWebsocket)
 		user := needLogin.Group("/user")
 		{
 			g.POST("/user/register", middleware.SetTimeOut(A.RoutTimeOut["/user/register"]), handlerConfig.Register)
@@ -108,7 +116,6 @@ func (A *ApiConfig) Begin(port string) {
 			{
 				group.POST("/apply-for-friend", middleware.SetTimeOut(A.RoutTimeOut["/group/apply-for-friend"]), handlerConfig.ApplyForFriend)
 				group.POST("/get-friend-apply-list", middleware.SetTimeOut(A.RoutTimeOut["/group/get-friend-apply-list"]), handlerConfig.GetFriendApplyList)
-				group.POST("/refuse-friend-apply", middleware.SetTimeOut(A.RoutTimeOut["/group/refuse-friend-apply"]), handlerConfig.RefuseFriendApply)
 				group.POST("/creat-session", middleware.SetTimeOut(A.RoutTimeOut["/group/creat-session"]), handlerConfig.CreatSession)
 
 				//添加功能：删除聊天记录

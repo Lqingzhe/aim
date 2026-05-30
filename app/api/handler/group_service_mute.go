@@ -14,13 +14,14 @@ import (
 )
 
 func (h *HandlerConfig) SetMute(c *gin.Context) {
+	var finalErr error
 	ctx := c.MustGet("ctx").(context.Context)
 	userID := c.GetInt64("user_id")
 	a, _ := c.Get("logger")
 	logger := a.(*zap.Logger)
 	var req struct {
-		GroupId         int64  `json:"group_id"`
-		GoalUserId      int64  `json:"goal_user_id"`
+		GroupId         int64  `json:"group_id,string"`
+		GoalUserId      int64  `json:"goal_user_id,string"`
 		MuteTimeSeconds int64  `json:"mute_time_seconds"`
 		MuteReason      string `json:"mute_reason"`
 	}
@@ -46,16 +47,20 @@ func (h *HandlerConfig) SetMute(c *gin.Context) {
 	}
 	kitexReq := &kitexgroupservice.SetMuteReq{
 		CommonInfo:     &kitexcommonmodel.CommonInfo{Trace: c.GetString("trace")},
+		GroupId:        req.GroupId,
 		UserId:         userID,
 		GoalUserId:     req.GoalUserId,
 		MuteReason:     req.MuteReason,
 		MuteTimeSecond: req.MuteTimeSeconds,
 	}
 	_, err := h.serviceClient.GroupClient.SetMute(ctx, kitexReq)
-	if err != nil {
-		err2 := newerror.TranslateError(err)
-		c.AbortWithStatusJSON(err2.HttpCode, gin.H{"code": err2.StatusCode, "message": err2.HttpMessage})
-		logger = newlog.AddError(logger, err, err2.StatusCode)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		err2 := newerror.TranslateError(finalErr)
+		c.AbortWithStatusJSON(err2.HttpCode, gin.H{
+			"code":    err2.StatusCode,
+			"message": err2.HttpMessage,
+		})
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, c.ClientIP(), c.FullPath())
 		newlog.SetGinLog(c, logger, "SetMute", err2.LogLevel)
 		return
@@ -64,18 +69,23 @@ func (h *HandlerConfig) SetMute(c *gin.Context) {
 		"code":    newerror.CodeSuccess,
 		"message": "success",
 	})
+	if finalErr != nil {
+		err2 := newerror.TranslateError(finalErr)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+	}
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, userID, c.ClientIP(), c.FullPath())
 	newlog.SetGinLog(c, logger, "SetMute", newerror.LevelInfo)
 }
 
 func (h *HandlerConfig) ReleaseMute(c *gin.Context) {
+	var finalErr error
 	ctx := c.MustGet("ctx").(context.Context)
 	userID := c.GetInt64("user_id")
 	a, _ := c.Get("logger")
 	logger := a.(*zap.Logger)
 	var req struct {
-		GoalUserId int64 `json:"goal_user_id"`
-		GroupId    int64 `json:"group_id"`
+		GoalUserId int64 `json:"goal_user_id,string"`
+		GroupId    int64 `json:"group_id,string"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -104,10 +114,13 @@ func (h *HandlerConfig) ReleaseMute(c *gin.Context) {
 		UserId:     userID,
 	}
 	_, err := h.serviceClient.GroupClient.ReleaseMute(ctx, kitexReq)
-	if err != nil {
-		err2 := newerror.TranslateError(err)
-		c.AbortWithStatusJSON(err2.HttpCode, gin.H{"code": err2.StatusCode, "message": err2.HttpMessage})
-		logger = newlog.AddError(logger, err, err2.StatusCode)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		err2 := newerror.TranslateError(finalErr)
+		c.AbortWithStatusJSON(err2.HttpCode, gin.H{
+			"code":    err2.StatusCode,
+			"message": err2.HttpMessage,
+		})
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, c.ClientIP(), c.FullPath())
 		newlog.SetGinLog(c, logger, "ReleaseMute", err2.LogLevel)
 		return
@@ -116,6 +129,10 @@ func (h *HandlerConfig) ReleaseMute(c *gin.Context) {
 		"code":    newerror.CodeSuccess,
 		"message": "success",
 	})
+	if finalErr != nil {
+		err2 := newerror.TranslateError(finalErr)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+	}
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, userID, c.ClientIP(), c.FullPath())
 	newlog.SetGinLog(c, logger, "ReleaseMute", newerror.LevelInfo)
 }

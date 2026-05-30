@@ -40,8 +40,10 @@ func NewStruct(groupID int64, members []int64, role []commonmodel.GroupRole, Ope
 		Role:            role,
 		whereWithMember: false,
 	}
-	for _, Operate := range Operations {
-		Operate(newStruct)
+	if len(Operations) > 0 {
+		for _, Operate := range Operations {
+			Operate(newStruct)
+		}
 	}
 	return newStruct
 }

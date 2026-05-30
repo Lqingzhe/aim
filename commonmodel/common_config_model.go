@@ -7,7 +7,6 @@ type CommonConfig struct {
 	EquipID     int                    `yaml:"equip_id"`
 	ServiceInfo map[string]ServiceInfo `yaml:"service_info"`
 	NacosConfig NacosConfig            `yaml:"nacos_config"`
-	KafkaConfig KafkaConfig            `yaml:"kafka_config"`
 }
 type GatewayConfig struct {
 	Port            string                   `yaml:"port"`
@@ -19,8 +18,8 @@ type ServiceInfo struct {
 	KitexTimeOut time.Duration `yaml:"kitex_time_out"`
 }
 type ServiceConfig struct {
-	Timeout time.Duration `yaml:"timeout"`
-	ServiceAddr
+	Timeout     time.Duration `yaml:"timeout"`
+	ServiceAddr ServiceAddr   `yaml:"service_addr"`
 }
 type ServiceAddr struct {
 	Host string `yaml:"host"`

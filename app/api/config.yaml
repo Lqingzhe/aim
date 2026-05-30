@@ -12,14 +12,11 @@ common_config:
       kitex_time_out: 5s
       service_addr:
   nacos_config:
-    host: "localhost"
+    host: "127.0.0.1"
     port: 8848
-  kafka_config:
-    broker:
-      - "localhost:9092"
 
 gateway_config:
-  port: "8888"
+  port: "8080"
   read_buffer_size: 1024
   write_buffer_size: 1024
 
@@ -81,9 +78,12 @@ token_config:
   refresh_token_expire_time: 720h
   access_token_expire_time: 1h
 
+kafka_config:
+  broker:
+    - "127.0.0.1:9092"
 
 redis_config:
-  addr: "localhost:6379"
+  addr: "127.0.0.1:6379"
   password: "123456"
   pool_size: 100
   min_idle_conns: 10

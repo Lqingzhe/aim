@@ -25,8 +25,10 @@ func NewStruct(goalID int64, applyUserID int64, Operations ...operation) *GroupA
 		},
 		Info: []*model.GroupApplyInfo{},
 	}
-	for _, Operation := range Operations {
-		Operation(newStruct)
+	if len(Operations) > 0 {
+		for _, Operate := range Operations {
+			Operate(newStruct)
+		}
 	}
 	return newStruct
 }

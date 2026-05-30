@@ -9,7 +9,10 @@ import (
 )
 
 func (s *GroupServiceImpl) SetMute(ctx context.Context, req *kitexgroupservice.SetMuteReq) (resp *kitexgroupservice.SetMuteResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewMute(req.CommonInfo.Trace, s.GroupNoticeTopic, s.DBContext, s.GroupConfig)
 	err = serviceStruct.SetMute(ctx, req.UserId, req.GroupId, req.GoalUserId, req.MuteTimeSecond, req.MuteReason)
 	if err != nil {
@@ -24,7 +27,10 @@ func (s *GroupServiceImpl) SetMute(ctx context.Context, req *kitexgroupservice.S
 
 // ReleaseMute implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) ReleaseMute(ctx context.Context, req *kitexgroupservice.ReleaseMuteReq) (resp *kitexgroupservice.ReleaseMuteResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewMute(req.CommonInfo.Trace, s.GroupNoticeTopic, s.DBContext, s.GroupConfig)
 	err = serviceStruct.ReleaseMute(ctx, req.UserId, req.GroupId, req.GoalUserId)
 	if err != nil {
@@ -39,8 +45,11 @@ func (s *GroupServiceImpl) ReleaseMute(ctx context.Context, req *kitexgroupservi
 
 // GetMuteStatus implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) GetMuteStatus(ctx context.Context, req *kitexgroupservice.GetMuteStatusReq) (resp *kitexgroupservice.GetMuteStatusResp, err error) {
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
 	var finalErr error
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewMute(req.CommonInfo.Trace, s.GroupNoticeTopic, s.DBContext, s.GroupConfig)
 	muteReason, muteEndTime, isMute, err := serviceStruct.GetMuteStatus(ctx, req.UserId, req.GroupId)
 	if err != nil {

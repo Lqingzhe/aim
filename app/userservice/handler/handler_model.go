@@ -13,15 +13,13 @@ type UserServiceImpl struct {
 	DBContext  *model.DBContext
 	Logger     *zap.Logger
 	UserConfig commonmodel.UserConfig
-	EquipID    int64
 }
 
-func NewUserServiceImpl(SnowNode *snowflake.Node, DBContext *model.DBContext, Logger *zap.Logger, UserConfig commonmodel.UserConfig, EquipID int64) *UserServiceImpl {
+func NewUserServiceImpl(SnowNode *snowflake.Node, DBContext *model.DBContext, Logger *zap.Logger, UserConfig commonmodel.UserConfig) *UserServiceImpl {
 	return &UserServiceImpl{
 		SnowNode:   SnowNode,
 		DBContext:  DBContext,
 		Logger:     Logger,
 		UserConfig: UserConfig,
-		EquipID:    EquipID,
 	}
 }

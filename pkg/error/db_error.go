@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -15,6 +16,9 @@ func IsMysqlError(result *gorm.DB) error {
 			return err2
 		}
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return MakeError(http.StatusConflict, CodeResourceDuplicate, "The Key Already Exist", fmt.Errorf(`The Key Already Set, Should Use "Update"`), LevelWarn)
+		}
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
 			return MakeError(http.StatusConflict, CodeResourceDuplicate, "The Key Already Exist", fmt.Errorf(`The Key Already Set, Should Use "Update"`), LevelWarn)
 		}
 		return MakeError(http.StatusInternalServerError, CodeDatabaseError, "Database Error", err, LevelError)

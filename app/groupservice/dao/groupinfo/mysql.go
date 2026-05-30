@@ -20,7 +20,7 @@ func setMysql(ctx context.Context, dbContext *model.DBContext, info *GroupInfo) 
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:SetMysql")
-	result := dbContext.Mysql.Client.WithContext(ctx).Create(info.GroupInfo)
+	result := dbContext.Mysql.Client.WithContext(ctx).Create(&info.GroupInfo)
 	if err2 := newerror.IsMysqlError(result); err2 != nil {
 		return err2
 	}
@@ -30,7 +30,7 @@ func getMysql(ctx context.Context, dbContext *model.DBContext, info *GroupInfo) 
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:GetMysql")
-	result := addWhereInfo(dbContext.Mysql.Client.WithContext(ctx).Model(&model.GroupInfo{}), info).Find(info.Info)
+	result := addWhereInfo(dbContext.Mysql.Client.WithContext(ctx).Model(&model.GroupInfo{}), info).Find(&info.Info)
 	if result.Error == nil && len(info.Info) == 0 {
 		return false, nil
 	}

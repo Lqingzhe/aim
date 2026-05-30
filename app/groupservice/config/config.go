@@ -5,9 +5,9 @@ import (
 	commonconfig "aim/pkg/config"
 )
 
-func InitConfig() model.Config {
+func InitConfig() *model.Config {
 	data := commonconfig.OpenYaml()
-	newConfig := model.Config{}
+	newConfig := &model.Config{}
 
 	newConfig.CommonConfig = commonconfig.GetCommonConfig(data)
 	newConfig.ServiceConfig = commonconfig.GetServiceConfig(data)

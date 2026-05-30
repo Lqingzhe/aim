@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -18,6 +19,7 @@ import (
 //
 
 func (h *HandlerConfig) Register(c *gin.Context) {
+	var finalErr error
 	ctx := c.MustGet("ctx").(context.Context)
 	a, _ := c.Get("logger")
 	logger := a.(*zap.Logger)
@@ -51,13 +53,13 @@ func (h *HandlerConfig) Register(c *gin.Context) {
 		Password: req.Password,
 	}
 	kitexResp, err := h.serviceClient.UserClient.Register(ctx, kitexReq)
-	if err != nil {
-		err2 := newerror.TranslateError(err)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		err2 := newerror.TranslateError(finalErr)
 		c.AbortWithStatusJSON(err2.HttpCode, gin.H{
 			"code":    err2.StatusCode,
 			"message": err2.HttpMessage,
 		})
-		logger = newlog.AddError(logger, err, err2.StatusCode)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, 0, c.ClientIP(), c.FullPath())
 		newlog.SetGinLog(c, logger, "Register", err2.LogLevel)
 		return
@@ -67,20 +69,25 @@ func (h *HandlerConfig) Register(c *gin.Context) {
 		"message": "success",
 		"data": gin.H{
 			"user_info": gin.H{
-				"user_id": kitexResp.UserId,
+				"user_id": strconv.FormatInt(kitexResp.UserId, 10),
 			},
 		},
 	})
+	if finalErr != nil {
+		err2 := newerror.TranslateError(finalErr)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+	}
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, kitexResp.UserId, c.ClientIP(), c.FullPath())
 	newlog.SetGinLog(c, logger, "Register", newerror.LevelInfo)
 	return
 }
 func (h *HandlerConfig) Login(c *gin.Context) {
+	var finalErr error
 	ctx := c.MustGet("ctx").(context.Context)
 	a, _ := c.Get("logger")
 	logger := a.(*zap.Logger)
 	var req struct {
-		UserID   int64  `json:"user_id"`
+		UserID   int64  `json:"user_id,string"`
 		Password string `json:"password"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -109,13 +116,13 @@ func (h *HandlerConfig) Login(c *gin.Context) {
 		Password:   req.Password,
 	}
 	_, err := h.serviceClient.UserClient.Login(ctx, kitexReq)
-	if err != nil {
-		err2 := newerror.TranslateError(err)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		err2 := newerror.TranslateError(finalErr)
 		c.AbortWithStatusJSON(err2.HttpCode, gin.H{
 			"code":    err2.StatusCode,
 			"message": err2.HttpMessage,
 		})
-		logger = newlog.AddError(logger, err, err2.StatusCode)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, req.UserID, c.ClientIP(), c.FullPath())
 		newlog.SetGinLog(c, logger, "Login", err2.LogLevel)
 		return
@@ -144,6 +151,10 @@ func (h *HandlerConfig) Login(c *gin.Context) {
 			},
 		},
 	})
+	if finalErr != nil {
+		err2 := newerror.TranslateError(finalErr)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+	}
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, req.UserID, c.ClientIP(), c.FullPath())
 	newlog.SetGinLog(c, logger, "Login", newerror.LevelInfo)
 	return
@@ -256,6 +267,7 @@ func (h *HandlerConfig) RefreshToken(c *gin.Context) {
 //
 
 func (h *HandlerConfig) GetUserInfo(c *gin.Context) {
+	var finalErr error
 	ctx := c.MustGet("ctx").(context.Context)
 	a, _ := c.Get("logger")
 	logger := a.(*zap.Logger)
@@ -267,17 +279,17 @@ func (h *HandlerConfig) GetUserInfo(c *gin.Context) {
 		UserId: userID,
 	}
 	kitexResp, err := h.serviceClient.UserClient.GetUserInfo(ctx, &kitexReq)
-	if err != nil {
-		err2 := newerror.TranslateError(err)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		err2 := newerror.TranslateError(finalErr)
 		c.AbortWithStatusJSON(err2.HttpCode, gin.H{
 			"code":    err2.StatusCode,
 			"message": err2.HttpMessage,
 		})
-		logger = newlog.AddError(logger, err, err2.StatusCode)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, c.ClientIP(), c.FullPath())
 	}
 	type userInfo struct {
-		UserID        int64  `json:"user_id"`
+		UserID        int64  `json:"user_id,string"`
 		UserName      string `json:"user_name"`
 		Introduction  string `json:"introduction"`
 		BirthdayYear  int64  `json:"birthday_year"`
@@ -286,7 +298,7 @@ func (h *HandlerConfig) GetUserInfo(c *gin.Context) {
 	}
 
 	type remarkInfo struct {
-		GoalUserID int64  `json:"goal_user_name"`
+		GoalUserID int64  `json:"goal_user_name,string"`
 		NickName   string `json:"nick_name"`
 	}
 	RemarkInfoList := make([]remarkInfo, len(kitexResp.RemarkInfo))
@@ -313,19 +325,26 @@ func (h *HandlerConfig) GetUserInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code":    newerror.CodeSuccess,
 		"message": "success",
-		"data":    resp,
+		"data": gin.H{
+			"user_info": resp,
+		},
 	})
+	if finalErr != nil {
+		err2 := newerror.TranslateError(finalErr)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+	}
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, userID, c.ClientIP(), c.FullPath())
 	newlog.SetGinLog(c, logger, "GetUserInfo", newerror.LevelInfo)
 	return
 }
 func (h *HandlerConfig) GetOtherUserInfo(c *gin.Context) {
+	var finalErr error
 	ctx := c.MustGet("ctx").(context.Context)
 	userID := c.GetInt64("user_id")
 	a, _ := c.Get("logger")
 	logger := a.(*zap.Logger)
 	var req struct {
-		GoalUserID int64 `json:"goal_user_id"`
+		GoalUserID int64 `json:"goal_user_id,string"`
 	}
 	if err := c.ShouldBind(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -354,13 +373,13 @@ func (h *HandlerConfig) GetOtherUserInfo(c *gin.Context) {
 		GoalUserId: req.GoalUserID,
 	}
 	kitexResp, err := h.serviceClient.UserClient.GetOtherUserInfo(ctx, &kitexReq)
-	if err != nil {
-		err2 := newerror.TranslateError(err)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		err2 := newerror.TranslateError(finalErr)
 		c.AbortWithStatusJSON(err2.HttpCode, gin.H{
 			"code":    err2.StatusCode,
 			"message": err2.HttpMessage,
 		})
-		logger = newlog.AddError(logger, err, err2.StatusCode)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, c.ClientIP(), c.FullPath())
 		newlog.SetGinLog(c, logger, "GetOtherUserInfo", newerror.LevelInfo)
 	}
@@ -388,11 +407,16 @@ func (h *HandlerConfig) GetOtherUserInfo(c *gin.Context) {
 			},
 		},
 	})
+	if finalErr != nil {
+		err2 := newerror.TranslateError(finalErr)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+	}
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, userID, c.ClientIP(), c.FullPath())
 	newlog.SetGinLog(c, logger, "GetOtherUserInfo", newerror.LevelInfo)
 	return
 }
 func (h *HandlerConfig) UpdateUserInfo(c *gin.Context) {
+	var finalErr error
 	ctx := c.MustGet("ctx").(context.Context)
 	userID := c.GetInt64("user_id")
 	a, _ := c.Get("logger")
@@ -438,13 +462,13 @@ func (h *HandlerConfig) UpdateUserInfo(c *gin.Context) {
 		},
 	}
 	_, err := h.serviceClient.UserClient.UpdateUserInfo(ctx, &kitexReq)
-	if err != nil {
-		err2 := newerror.TranslateError(err)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		err2 := newerror.TranslateError(finalErr)
 		c.AbortWithStatusJSON(err2.HttpCode, gin.H{
 			"code":    err2.StatusCode,
 			"message": err2.HttpMessage,
 		})
-		logger = newlog.AddError(logger, err, err2.StatusCode)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, c.ClientIP(), c.FullPath())
 		newlog.SetGinLog(c, logger, "UpdateUserInfo", err2.LogLevel)
 		return
@@ -453,17 +477,22 @@ func (h *HandlerConfig) UpdateUserInfo(c *gin.Context) {
 		"code":    newerror.CodeSuccess,
 		"message": "success",
 	})
+	if finalErr != nil {
+		err2 := newerror.TranslateError(finalErr)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+	}
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, userID, c.ClientIP(), c.FullPath())
 	newlog.SetGinLog(c, logger, "UpdateUserInfo", newerror.LevelInfo)
 	return
 }
 func (h *HandlerConfig) Remark(c *gin.Context) {
+	var finalErr error
 	ctx := c.MustGet("ctx").(context.Context)
 	userID := c.GetInt64("user_id")
 	a, _ := c.Get("logger")
 	logger := a.(*zap.Logger)
 	var req struct {
-		GoalUserID int64  `json:"goal_user_id"`
+		GoalUserID int64  `json:"goal_user_id,string"`
 		NickName   string `json:"nick_name"`
 	}
 	if err := c.ShouldBind(&req); err != nil {
@@ -497,13 +526,13 @@ func (h *HandlerConfig) Remark(c *gin.Context) {
 		},
 	}
 	_, err := h.serviceClient.UserClient.Remark(ctx, &kitexReq)
-	if err != nil {
-		err2 := newerror.TranslateError(err)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		err2 := newerror.TranslateError(finalErr)
 		c.AbortWithStatusJSON(err2.HttpCode, gin.H{
 			"code":    err2.StatusCode,
 			"message": err2.HttpMessage,
 		})
-		logger = newlog.AddError(logger, err, err2.StatusCode)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, c.ClientIP(), c.FullPath())
 		newlog.SetGinLog(c, logger, "Remark", err2.LogLevel)
 		return
@@ -512,11 +541,16 @@ func (h *HandlerConfig) Remark(c *gin.Context) {
 		"code":    newerror.CodeSuccess,
 		"message": "success",
 	})
+	if finalErr != nil {
+		err2 := newerror.TranslateError(finalErr)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+	}
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, userID, c.ClientIP(), c.FullPath())
 	newlog.SetGinLog(c, logger, "Remark", newerror.LevelInfo)
 	return
 }
 func (h *HandlerConfig) GetGroupAndSessionID(c *gin.Context) {
+	var finalErr error
 	ctx := c.MustGet("ctx").(context.Context)
 	userID := c.GetInt64("user_id")
 	a, _ := c.Get("logger")
@@ -526,8 +560,8 @@ func (h *HandlerConfig) GetGroupAndSessionID(c *gin.Context) {
 		UserId:     userID,
 	}
 	kitexResp, err := h.serviceClient.GroupClient.GetGroupAndSessionID(ctx, kitexReq)
-	if err != nil {
-		err2 := newerror.TranslateError(err)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		err2 := newerror.TranslateError(finalErr)
 		c.AbortWithStatusJSON(err2.HttpCode, gin.H{"code": err2.StatusCode, "message": err2.HttpMessage})
 		logger = newlog.AddError(logger, err, err2.StatusCode)
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, c.ClientIP(), c.FullPath())
@@ -546,6 +580,10 @@ func (h *HandlerConfig) GetGroupAndSessionID(c *gin.Context) {
 			},
 		},
 	})
+	if finalErr != nil {
+		err2 := newerror.TranslateError(finalErr)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+	}
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, userID, c.ClientIP(), c.FullPath())
 	newlog.SetGinLog(c, logger, "GetGroupAndSessionID", newerror.LevelInfo)
 }

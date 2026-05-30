@@ -18,15 +18,14 @@ func InitLog(service string, equipID int) *zap.Logger {
 	cfg.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
 	logger, _ := cfg.Build()
 	logger = logger.With(zap.String("service", service), zap.Int("equip_id", equipID)) // 全局使用
-	return logger.With(zap.Int("status_code", int(newerror.CodeSuccess)))              //设置默认值
+	return logger                                                                      //设置默认值
 } //注册logger,gateway就传入gateway,调用完成后defer logger.Sync()
 func AddLatencyAndTime(zapConfig *zap.Logger, beginTime time.Time) *zap.Logger {
 	now := time.Now()
-	return zapConfig.With(zap.Time("begin_time", beginTime), zap.Duration("latency_time", now.Sub(beginTime)))
-
+	return zapConfig.With(zap.Duration("latency_time", now.Sub(beginTime)))
 }
-func AddTraceAndEquipID(zapConfig *zap.Logger, traceID string, equipID int64) *zap.Logger {
-	return zapConfig.With(zap.Int64("equip_id", equipID), zap.String("trace_id", traceID))
+func AddTraceID(zapConfig *zap.Logger, traceID string) *zap.Logger {
+	return zapConfig.With(zap.String("trace_id", traceID))
 } //在每个handler开头调用
 func AddError(zapConfig *zap.Logger, err error, statueCode newerror.ErrorStatue) *zap.Logger {
 	return zapConfig.With(zap.Int("status_code", int(statueCode)), zap.Error(err))

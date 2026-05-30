@@ -10,11 +10,14 @@ import (
 
 // SetOfflineMessage implements the KitexMessageServiceImpl interface.
 func (s *KitexMessageServiceImpl) SetOfflineMessage(ctx context.Context, req *kitexmessageservice.SetOfflineMessageReq) (resp *kitexmessageservice.SetOfflineMessageResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.logger, req.CommonInfo.Trace, s.equipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewMessageService(req.CommonInfo.Trace, s.messageConfig, s.snowFlake, s.dbContext, s.serviceClient, s.messageTopic, s.groupNoticeTopic, s.systemTopic)
 	err = serviceStruct.SetOffLineMessage(ctx, req.GoalUserAndDeviceId, req.JsonData)
 	if err != nil {
-		err2 := newerror.TranslateError(err).AddErrorTrace("offline_message:SetOfflineMessage")
+		err2 := newerror.TranslateError(err)
 		newlog.Log(logger, err2.LogLevel, "SetOfflineMessage")
 		return nil, err2
 	}
@@ -24,11 +27,14 @@ func (s *KitexMessageServiceImpl) SetOfflineMessage(ctx context.Context, req *ki
 
 // GetOfflineMessageList implements the KitexMessageServiceImpl interface.
 func (s *KitexMessageServiceImpl) GetOfflineMessageList(ctx context.Context, req *kitexmessageservice.GetOfflineMessageListReq) (resp *kitexmessageservice.GetOfflineMessageListResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.logger, req.CommonInfo.Trace, s.equipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewMessageService(req.CommonInfo.Trace, s.messageConfig, s.snowFlake, s.dbContext, s.serviceClient, s.messageTopic, s.groupNoticeTopic, s.systemTopic)
 	jsondataList, exist, err := serviceStruct.GetOffLineMessageList(ctx, req.UserAndDeviceId)
 	if err != nil {
-		err2 := newerror.TranslateError(err).AddErrorTrace("offline_message:GetOfflineMessageList")
+		err2 := newerror.TranslateError(err)
 		newlog.Log(logger, err2.LogLevel, "GetOfflineMessageList")
 		return nil, err2
 	}

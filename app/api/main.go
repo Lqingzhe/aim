@@ -9,7 +9,6 @@ import (
 	"aim/kitex_gen/kitexgroupservice/kitexgroupservice"
 	"aim/kitex_gen/kitexmessageservice/kitexmessageservice"
 	"aim/kitex_gen/kitexuserservice/kitexuserservice"
-	"log"
 	"net/http"
 
 	commonconfig "aim/pkg/config"
@@ -22,10 +21,6 @@ import (
 
 func main() {
 	Config := config.InitConfig()
-	//
-	//log.Printf("main:%s\n", Config.CommonConfig)
-	log.Printf("main:%#v\n", Config.CommonConfig.KafkaConfig.Broker)
-	log.Printf("main:%v\n", len(Config.CommonConfig.KafkaConfig.Broker))
 
 	logger := newlog.InitLog(Config.Service, Config.EquipID)
 	defer logger.Sync()
@@ -37,27 +32,31 @@ func main() {
 
 	UserClient := kitexuserservice.MustNewClient(
 		"user_service",
-		commonconfig.ResolverService(Config.NacosConfig, logger),
+		//commonconfig.ResolverService(Config.NacosConfig, logger),
+		client.WithHostPorts("127.0.0.1:8889"),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["user_service"].KitexTimeOut),
 	)
 	GroupClient := kitexgroupservice.MustNewClient(
 		"group_service",
-		commonconfig.ResolverService(Config.NacosConfig, logger),
+		//commonconfig.ResolverService(Config.NacosConfig, logger),
+		client.WithHostPorts("127.0.0.1:8890"),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["group_service"].KitexTimeOut),
 	)
 	FileClient := kitexfileservice.MustNewClient(
 		"file_service",
-		commonconfig.ResolverService(Config.NacosConfig, logger),
+		//commonconfig.ResolverService(Config.NacosConfig, logger),
+		client.WithHostPorts("127.0.0.1:8892"),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["file_service"].KitexTimeOut),
 	)
 	MessageClient := kitexmessageservice.MustNewClient(
 		"message_service",
-		commonconfig.ResolverService(Config.NacosConfig, logger),
+		//commonconfig.ResolverService(Config.NacosConfig, logger),
+		client.WithHostPorts("127.0.0.1:8891"),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["message_service"].KitexTimeOut),
 	)
 
 	kafkaConfig := commonconfig.GetKafkaConsumerConfig()
-	consumer := commonconfig.MakeKafkaConsumer(Config.CommonConfig.KafkaConfig.Broker, kafkaConfig, logger)
+	consumer := commonconfig.MakeKafkaConsumer(Config.KafkaConfig.Broker, kafkaConfig, logger)
 
 	httpStruct := api.NewConfig(
 		logger,

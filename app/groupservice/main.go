@@ -7,12 +7,15 @@ import (
 	"aim/app/groupservice/model"
 	"aim/kitex_gen/kitexgroupservice/kitexgroupservice"
 	"aim/kitex_gen/kitexmessageservice/kitexmessageservice"
+	"aim/kitex_gen/kitexuserservice/kitexuserservice"
+	"net"
+	"strconv"
 
 	commonconfig "aim/pkg/config"
 	"aim/pkg/id"
 	newlog "aim/pkg/log"
 
-	"github.com/cloudwego/kitex/pkg/rpcinfo"
+	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/server"
 )
 
@@ -42,8 +45,17 @@ func main() {
 
 	MessageClient := kitexmessageservice.MustNewClient(
 		"message_service",
-		commonconfig.ResolverService("message_service", Config.CommonConfig.ServiceInfo, logger),
+		commonconfig.ResolverService(Config.NacosConfig, logger),
+		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["message_service"].KitexTimeOut),
 	)
+	UserClient := kitexuserservice.MustNewClient(
+		"user_service",
+		commonconfig.ResolverService(Config.NacosConfig, logger),
+		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["user_service"].KitexTimeOut))
+	addr, err := net.ResolveTCPAddr("tcp", Config.ServiceConfig.ServiceAddr.Host+":"+strconv.FormatInt(Config.ServiceConfig.ServiceAddr.Port, 10))
+	if err != nil {
+		newlog.LogInitFatal(logger, err, "Make Addr Failed")
+	}
 
 	svr := kitexgroupservice.NewServer(
 		handler.NewGroupServiceImpl(
@@ -53,22 +65,27 @@ func main() {
 			Config.GroupConfig,
 			model.ServiceClient{
 				MessageClient: MessageClient,
+				UserClient:    UserClient,
 			},
-			int64(Config.EquipID),
 			groupNoticeTopic,
 			systemTopic,
 		),
-		server.WithServerBasicInfo(
-			&rpcinfo.EndpointBasicInfo{
-				ServiceName: "group-service",
-			},
-		),
-		commonconfig.RegisterService(
-			Config.ServiceConfig,
-			logger,
-		),
+		server.WithServiceAddr(addr),
+		//server.WithServerBasicInfo(
+		//	&rpcinfo.EndpointBasicInfo{
+		//		ServiceName: "group_service",
+		//	},
+		//),
+		//server.WithServiceAddr(&net.TCPAddr{
+		//	IP:   net.ParseIP(Config.ServiceConfig.Host),
+		//	Port: int(Config.ServiceConfig.Port),
+		//}),
+		//commonconfig.RegisterService(
+		//	Config.NacosConfig,
+		//	logger,
+		//),
 	)
-	err := svr.Run()
+	err = svr.Run()
 	if err != nil {
 		newlog.LogInitFatal(logger, err, "Grcp Begin Error")
 	}

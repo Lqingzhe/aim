@@ -10,7 +10,6 @@ import (
 )
 
 type KitexMessageServiceImpl struct {
-	equipID          int64
 	logger           *zap.Logger
 	messageConfig    commonmodel.MessageConfig
 	snowFlake        *snowflake.Node
@@ -21,9 +20,8 @@ type KitexMessageServiceImpl struct {
 	systemTopic      sarama.SyncProducer
 }
 
-func NewMessageServiceImpl(equipID int64, logger *zap.Logger, messageConfig commonmodel.MessageConfig, snowFlake *snowflake.Node, dbContext *model.DBContext, serviceClient model.ServiceClient, messageTopic sarama.SyncProducer, groupNoticeTopic sarama.SyncProducer, systemTopic sarama.SyncProducer) *KitexMessageServiceImpl {
+func NewMessageServiceImpl(logger *zap.Logger, messageConfig commonmodel.MessageConfig, snowFlake *snowflake.Node, dbContext *model.DBContext, serviceClient model.ServiceClient, messageTopic sarama.SyncProducer, groupNoticeTopic sarama.SyncProducer, systemTopic sarama.SyncProducer) *KitexMessageServiceImpl {
 	return &KitexMessageServiceImpl{
-		equipID:          equipID,
 		logger:           logger,
 		messageConfig:    messageConfig,
 		snowFlake:        snowFlake,

@@ -11,11 +11,11 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func Log(rawLogger *zap.Logger, equipID int64) gin.HandlerFunc {
+func Log(rawLogger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		beginTime := time.Now()
 		trace := uuid.NewString()
-		logger := newlog.AddTraceAndEquipID(rawLogger, trace, equipID)
+		logger := newlog.AddTraceID(rawLogger, trace)
 		c.Set("logger", logger)
 		c.Set("trace", trace)
 
@@ -31,7 +31,7 @@ func Log(rawLogger *zap.Logger, equipID int64) gin.HandlerFunc {
 		if !ok {
 			newlog.Log(rawLogger, newerror.LevelFatal, "Middleware Can't Get Logger")
 		}
-		newlog.AddLatencyAndTime(logger, beginTime)
+		logger = newlog.AddLatencyAndTime(logger, beginTime)
 		newlog.Log(logger, zapcore.Level(loglevel), message)
 	}
 }

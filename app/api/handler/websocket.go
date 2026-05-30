@@ -15,19 +15,31 @@ func (h *HandlerConfig) ConnectWebsocket(c *gin.Context) {
 	beginTime := time.Now()
 	a, _ := c.Get("logger")
 	logger := a.(*zap.Logger)
-	userID := c.GetInt64("user_id")
-	deviceID := c.GetHeader("X-Device-ID")
-	rawCtx, _ := c.Get("context")
-	traceID := c.GetString("trace_id")
+	accessToken := c.Query("token")
+	rawCtx, _ := c.Get("ctx")
+	traceID := c.GetString("trace")
 	ip := c.ClientIP()
 	fullPath := c.FullPath()
 	ctx := rawCtx.(context.Context)
+	tokenStruct := service.NewToken(h.dbContext, h.tokenConfig)
+	userID, deviceID, err := tokenStruct.AnalysisAccessToken(accessToken)
+	if err != nil {
+		err2 := newerror.TranslateError(err)
+		c.AbortWithStatusJSON(err2.HttpCode, gin.H{
+			"code":    err2.StatusCode,
+			"message": err2.HttpMessage,
+		})
+		logger = newlog.AddError(logger, err, err2.StatusCode)
+		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, ip, fullPath)
+		logger = newlog.AddLatencyAndTime(logger, beginTime)
+		newlog.Log(logger, newerror.LevelInfo, "ConnectWebsocket")
+	}
 	webStruct := service.NewWebSocket(h.hub)
 	conn, err := h.websocketUpgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		logger = newlog.AddError(logger, err, newerror.CodeInternalError)
 		logger = newlog.AddGateWayInfo(logger, -1, userID, ip, fullPath)
-		newlog.AddLatencyAndTime(logger, beginTime)
+		logger = newlog.AddLatencyAndTime(logger, beginTime)
 		newlog.Log(logger, newerror.LevelInfo, "ConnectWebsocket")
 		return
 	}

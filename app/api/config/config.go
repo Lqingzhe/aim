@@ -15,6 +15,6 @@ func InitConfig() *model.Config {
 	newConfig.DBConfig = initDBConfig(data)
 	newConfig.LimiterConfig = commonconfig.GetLimitersConfig(data)
 	newConfig.TokenConfig = commonconfig.GetTokenConfig(data)
-	
+	newConfig.KafkaConfig = commonconfig.GetKafkaConfig(data)
 	return newConfig
 }

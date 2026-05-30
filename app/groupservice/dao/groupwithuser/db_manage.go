@@ -14,9 +14,9 @@ type GroupWithUser struct {
 	whereWithGroupID bool
 	whereWithUserID  bool
 }
-type option func(*GroupWithUser)
+type operation func(*GroupWithUser)
 
-func NewStruct(GroupID int64, UserID int64, GroupRemarkName string, role commonmodel.GroupRole, Options ...option) *GroupWithUser {
+func NewStruct(GroupID int64, UserID int64, GroupRemarkName string, role commonmodel.GroupRole, Operations ...operation) *GroupWithUser {
 	newStruct := &GroupWithUser{
 		GroupWithUserInfo: model.GroupWithUserInfo{
 			GroupID:         GroupID,
@@ -27,8 +27,10 @@ func NewStruct(GroupID int64, UserID int64, GroupRemarkName string, role commonm
 		Info: []*model.GroupWithUserInfo{},
 	}
 
-	for _, Option := range Options {
-		Option(newStruct)
+	if len(Operations) > 0 {
+		for _, Operate := range Operations {
+			Operate(newStruct)
+		}
 	}
 	return newStruct
 }

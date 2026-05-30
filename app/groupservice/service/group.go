@@ -15,6 +15,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -94,7 +95,7 @@ func (s *ServiceGroup) ChangeGroupInfo(ctx context.Context, groupID int64, userI
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     memberList,
 		SessionID:      groupID,
-		Data:           map[string]any{"user_id": userID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10)},
 		MessageCode:    commonmodel.MessageCode_GroupInfoChange,
 	}
 	_, _, err = tool.SendKafkaGroupNotice(s.groupNoticeTopic, groupNoticeMessage)
@@ -135,7 +136,7 @@ func (s *ServiceGroup) CreateGroup(ctx context.Context, userID int64, groupName 
 	groupID = s.snowFlack.Generate().Int64()
 	groupStruct := groupinfo.NewStruct(groupID, groupName)
 	groupWithUserStruct := groupwithuser.NewStruct(groupID, userID, "", commonmodel.GroupOwner)
-	groupMemberStruct := groupmember.NewStruct(groupID, []int64{userID}, []commonmodel.GroupRole{commonmodel.GroupOwner}, nil)
+	groupMemberStruct := groupmember.NewStruct(groupID, []int64{userID}, []commonmodel.GroupRole{commonmodel.GroupOwner})
 	DB := &model.DBContext{
 		Mysql: tool.BeginMysqlTransaction(s.dbContext.Mysql),
 		Redis: s.dbContext.Redis,
@@ -213,7 +214,7 @@ func (s *ServiceGroup) DeleteGroup(ctx context.Context, userID int64, groupID in
 	_, err = s.serviceClient.MessageClient.DeleteMessageAllGroup(ctx, &deleteMessageAllGroupReq)
 	if err != nil {
 		DB.Mysql.Client.Rollback()
-		return err
+		return newerror.UnMarshalError(err)
 	}
 	result := DB.Mysql.Client.Commit()
 	if err2 := newerror.IsMysqlError(result); err2 != nil {
@@ -223,7 +224,7 @@ func (s *ServiceGroup) DeleteGroup(ctx context.Context, userID int64, groupID in
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     memberID,
-		Data:           map[string]any{"user_id": userID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10)},
 		MessageCode:    commonmodel.MessageCode_GroupDisband,
 	}
 	_, _, err = tool.SendKafkaSystemMessage(s.systemTopic, messageStruct)
@@ -282,7 +283,7 @@ func (s *ServiceGroup) LeaveGroup(ctx context.Context, groupID int64, userID int
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     memberID,
 		SessionID:      groupID,
-		Data:           map[string]any{"user_id": userID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10)},
 		MessageCode:    commonmodel.MessageCode_GroupLeave,
 	}
 	_, _, err = tool.SendKafkaGroupNotice(s.groupNoticeTopic, messageStruct)
@@ -318,7 +319,7 @@ func (s *ServiceGroup) SetGroupApply(ctx context.Context, groupID int64, userID 
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     managerIDs,
-		Data:           map[string]any{"user_id": userID, "group_id": groupID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10), "group_id": strconv.FormatInt(groupID, 10)},
 		MessageCode:    commonmodel.MessageCode_GroupApply,
 	}
 	_, _, err = tool.SendKafkaSystemMessage(s.systemTopic, messageStruct)
@@ -444,14 +445,14 @@ func (s *ServiceGroup) AgreeGroupApply(ctx context.Context, groupID int64, userI
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     memberID,
 		SessionID:      groupID,
-		Data:           map[string]interface{}{"user_id": userID, "goal_user_id": goalUserID},
+		Data:           map[string]interface{}{"user_id": strconv.FormatInt(userID, 10), "goal_user_id": strconv.FormatInt(goalUserID, 10)},
 		MessageCode:    commonmodel.MessageCode_GroupJoin,
 	}
 	systemMessageStruct := commonmodel.KafkaSystemMessage{
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     []int64{goalUserID},
-		Data:           map[string]any{"group_id": groupID},
+		Data:           map[string]any{"group_id": strconv.FormatInt(groupID, 10)},
 		MessageCode:    commonmodel.MessageCode_GroupJoin,
 	}
 	_, _, err = tool.SendKafkaGroupNotice(s.groupNoticeTopic, groupMessageStruct)
@@ -488,7 +489,7 @@ func (s *ServiceGroup) RefuseGroupApply(ctx context.Context, groupID int64, user
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     []int64{goalUserID},
-		Data:           map[string]any{"group_id": groupID},
+		Data:           map[string]any{"group_id": strconv.FormatInt(groupID, 10)},
 		MessageCode:    commonmodel.MessageCode_GroupRefuse,
 	}
 	_, _, err = tool.SendKafkaSystemMessage(s.systemTopic, systemMessageStruct)
@@ -558,14 +559,14 @@ func (s *ServiceGroup) TransformGroupOwner(ctx context.Context, groupID int64, u
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     memberIDList,
 		SessionID:      groupID,
-		Data:           map[string]interface{}{"user_id": userID, "goal_user_id": goalUserID},
+		Data:           map[string]interface{}{"user_id": strconv.FormatInt(userID, 10), "goal_user_id": strconv.FormatInt(goalUserID, 10)},
 		MessageCode:    commonmodel.MessageCode_TransformGroupOwner,
 	}
 	systemMessageStruct := commonmodel.KafkaSystemMessage{
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     []int64{goalUserID},
-		Data:           map[string]any{"group_id": groupID},
+		Data:           map[string]any{"group_id": strconv.FormatInt(groupID, 10)},
 		MessageCode:    commonmodel.MessageCode_TransformGroupOwner,
 	}
 	_, _, err = tool.SendKafkaGroupNotice(s.groupNoticeTopic, groupMessageStruct)
@@ -634,14 +635,14 @@ func (s *ServiceGroup) KickOutGroup(ctx context.Context, userID int64, goalUserI
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     memberIDList,
 		SessionID:      groupID,
-		Data:           map[string]interface{}{"user_id": userID, "goal_user_id": goalUserID},
+		Data:           map[string]interface{}{"user_id": strconv.FormatInt(userID, 10), "goal_user_id": strconv.FormatInt(goalUserID, 10)},
 		MessageCode:    commonmodel.MessageCode_GroupKick,
 	}
 	systemMessageStruct := commonmodel.KafkaSystemMessage{
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     []int64{goalUserID},
-		Data:           map[string]any{"user_id": userID, "group_id": groupID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10), "group_id": strconv.FormatInt(groupID, 10)},
 		MessageCode:    commonmodel.MessageCode_GroupKick,
 	}
 	_, _, err = tool.SendKafkaSystemMessage(s.systemTopic, systemMessageStruct)
@@ -707,7 +708,7 @@ func (s *ServiceGroup) SetManager(ctx context.Context, userID int64, goalUserID 
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     []int64{goalUserID},
-		Data:           map[string]any{"user_id": userID, "group_id": groupID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10), "group_id": strconv.FormatInt(groupID, 10)},
 		MessageCode:    commonmodel.MessageCode_SetGroupManager,
 	}
 	groupMessageStruct := commonmodel.KafkaGroupNotice{
@@ -715,7 +716,7 @@ func (s *ServiceGroup) SetManager(ctx context.Context, userID int64, goalUserID 
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     memberIDList,
 		SessionID:      groupID,
-		Data:           map[string]interface{}{"user_id": userID, "goal_user_id": goalUserID},
+		Data:           map[string]interface{}{"user_id": strconv.FormatInt(userID, 10), "goal_user_id": strconv.FormatInt(goalUserID, 10)},
 		MessageCode:    commonmodel.MessageCode_SetGroupManager,
 	}
 	_, _, err = tool.SendKafkaSystemMessage(s.systemTopic, systemMessageStruct)
@@ -780,7 +781,7 @@ func (s *ServiceGroup) RevokeManager(ctx context.Context, userID int64, goalUser
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     []int64{goalUserID},
-		Data:           map[string]any{"user_id": userID, "group_id": groupID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10), "group_id": strconv.FormatInt(groupID, 10)},
 		MessageCode:    commonmodel.MessageCode_RevokeGroupManager,
 	}
 	groupMessageStruct := commonmodel.KafkaGroupNotice{
@@ -788,7 +789,7 @@ func (s *ServiceGroup) RevokeManager(ctx context.Context, userID int64, goalUser
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     memberIDList,
 		SessionID:      groupID,
-		Data:           map[string]interface{}{"user_id": userID, "goal_user_id": goalUserID},
+		Data:           map[string]interface{}{"user_id": strconv.FormatInt(userID, 10), "goal_user_id": strconv.FormatInt(goalUserID, 10)},
 		MessageCode:    commonmodel.MessageCode_RevokeGroupManager,
 	}
 	_, _, err = tool.SendKafkaSystemMessage(s.systemTopic, systemMessageStruct)

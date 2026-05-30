@@ -12,9 +12,9 @@ type GroupInfo struct {
 	whereWithGroupName bool
 	Info               []*model.GroupInfo
 }
-type option func(*GroupInfo)
+type operation func(*GroupInfo)
 
-func NewStruct(GroupID int64, GroupName string, Options ...option) *GroupInfo {
+func NewStruct(GroupID int64, GroupName string, Operations ...operation) *GroupInfo {
 	newStruct := &GroupInfo{
 		GroupInfo: model.GroupInfo{
 			GroupID:   GroupID,
@@ -22,8 +22,10 @@ func NewStruct(GroupID int64, GroupName string, Options ...option) *GroupInfo {
 		},
 		Info: []*model.GroupInfo{},
 	}
-	for _, Option := range Options {
-		Option(newStruct)
+	if len(Operations) > 0 {
+		for _, Operate := range Operations {
+			Operate(newStruct)
+		}
 	}
 	return newStruct
 }

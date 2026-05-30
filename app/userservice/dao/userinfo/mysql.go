@@ -13,7 +13,7 @@ func setMysql(ctx context.Context, dbContext *model.DBContext, info *DaoUserInfo
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:SetMysql")
-	result := dbContext.Mysql.Client.WithContext(ctx).Create(info.UserInfo)
+	result := dbContext.Mysql.Client.WithContext(ctx).Create(&info.UserInfo)
 	if err2 := newerror.IsMysqlError(result); err2 != nil {
 		return err2
 	}

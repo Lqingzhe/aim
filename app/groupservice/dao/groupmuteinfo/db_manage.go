@@ -13,9 +13,9 @@ type MuteInfo struct {
 	Info            []*model.GroupMuteInfo
 	whereWithUserID bool
 }
-type operate func(*MuteInfo)
+type operation func(*MuteInfo)
 
-func NewStruct(groupID int64, userID int64, muteEndTime time.Time, muteReason string, Operates ...operate) *MuteInfo {
+func NewStruct(groupID int64, userID int64, muteEndTime time.Time, muteReason string, Operations ...operation) *MuteInfo {
 	newStruct := &MuteInfo{
 		GroupMuteInfo: model.GroupMuteInfo{
 			GroupID:     groupID,
@@ -25,8 +25,10 @@ func NewStruct(groupID int64, userID int64, muteEndTime time.Time, muteReason st
 		},
 		Info: []*model.GroupMuteInfo{},
 	}
-	for _, Operate := range Operates {
-		Operate(newStruct)
+	if len(Operations) > 0 {
+		for _, Operate := range Operations {
+			Operate(newStruct)
+		}
 	}
 	return newStruct
 }

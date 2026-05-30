@@ -9,11 +9,13 @@ import (
 	"aim/commonmodel"
 	"aim/kitex_gen/kitexcommonmodel"
 	"aim/kitex_gen/kitexmessageservice"
+	"aim/kitex_gen/kitexuserservice"
 	newerror "aim/pkg/error"
 	"aim/tool"
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -73,7 +75,7 @@ func (s *ServiceSession) CreatSession(ctx context.Context, userID int64, goalUse
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     []int64{goalUserID},
-		Data:           map[string]any{"user_id": userID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10)},
 		MessageCode:    commonmodel.MessageCode_FriendRequest_Success,
 	}
 	_, _, err = tool.SendKafkaSystemMessage(s.systemTopic, messageStruct)
@@ -119,7 +121,7 @@ func (s *ServiceSession) DeleteSession(ctx context.Context, sessionID int64, use
 	_, err = s.serviceClient.MessageClient.DeleteMessageAllGroup(ctx, &deleteMessageAllGroupReq)
 	if err != nil {
 		DB.Mysql.Client.Rollback()
-		return err
+		return newerror.UnMarshalError(err)
 	}
 	err = DB.Mysql.Client.Commit().Error
 	if err != nil {
@@ -129,7 +131,7 @@ func (s *ServiceSession) DeleteSession(ctx context.Context, sessionID int64, use
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     []int64{goalUserID},
-		Data:           map[string]any{"user_id": userID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10)},
 		MessageCode:    commonmodel.MessageCode_FriendDelete,
 	}
 	_, _, err = tool.SendKafkaSystemMessage(s.systemTopic, messageStruct)
@@ -157,7 +159,23 @@ func (s *ServiceSession) ApplyForFriend(ctx context.Context, userID int64, goalU
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("session:ApplyForFriend")
+	var finalErr error
+	getOtherUserInfoReq := kitexuserservice.GetOtherUserInfoReq{
+		CommonInfo: &kitexcommonmodel.CommonInfo{Trace: s.traceID},
+		GoalUserId: goalUserID,
+	}
+	_, err = s.serviceClient.UserClient.GetOtherUserInfo(ctx, &getOtherUserInfoReq)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return finalErr
+	}
 	groupApplyStruct := groupapply.NewStruct(userID, goalUserID)
+	exist, err := dao.Get(ctx, groupApplyStruct, s.dbContext)
+	if err != nil {
+		return err
+	}
+	if exist {
+		return newerror.MakeError(http.StatusTooManyRequests, newerror.CodeResourceDuplicate, "Friend Apply Is Already Exist", fmt.Errorf("Repeat Send Friend Apply"), newerror.LevelInfo)
+	}
 	err = dao.Add(ctx, groupApplyStruct, s.dbContext)
 	if err != nil {
 		return err
@@ -166,7 +184,7 @@ func (s *ServiceSession) ApplyForFriend(ctx context.Context, userID int64, goalU
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     []int64{goalUserID},
-		Data:           map[string]any{"user_id": userID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10)},
 		MessageCode:    commonmodel.MessageCode_FriendRequest,
 	}
 	_, _, err = tool.SendKafkaSystemMessage(s.systemTopic, messageStruct)
@@ -202,11 +220,16 @@ func (s *ServiceSession) RefuseFriendApply(ctx context.Context, userID int64, go
 	if err != nil {
 		return err
 	}
+	groupApplyStruct = groupapply.NewStruct(goalUserID, userID, groupapply.WithGoalID, groupapply.WithApplyUserID)
+	err = dao.Delete(ctx, groupApplyStruct, s.dbContext)
+	if err != nil {
+		return err
+	}
 	messageStruct := commonmodel.KafkaSystemMessage{
 		TraceID:        s.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     []int64{goalUserID},
-		Data:           map[string]any{"user_id": userID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10)},
 		MessageCode:    commonmodel.MessageCode_FriendRequest_Refuse,
 	}
 	_, _, err = tool.SendKafkaSystemMessage(s.systemTopic, messageStruct)

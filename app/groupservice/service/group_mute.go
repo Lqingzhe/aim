@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -80,7 +81,7 @@ func (m *Mute) SetMute(ctx context.Context, userID int64, groupID int64, goalUse
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     memberList,
 		SessionID:      groupID,
-		Data:           map[string]any{"user_id": userID, "goal_user_id": goalUserID, "mute_time": MuteTimeSecond, "mute_reason": MuteReason},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10), "goal_user_id": strconv.FormatInt(goalUserID, 10), "mute_time": MuteTimeSecond, "mute_reason": MuteReason},
 		MessageCode:    commonmodel.MessageCode_GroupSetMute,
 	}
 	_, _, err = tool.SendKafkaGroupNotice(m.groupNoticeTopic, groupNoticeMessage)
@@ -123,7 +124,7 @@ func (m *Mute) ReleaseMute(ctx context.Context, userID int64, groupID int64, goa
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     memberList,
 		SessionID:      groupID,
-		Data:           map[string]any{"user_id": userID, "goal_user_id": goalUserID},
+		Data:           map[string]any{"user_id": strconv.FormatInt(userID, 10), "goal_user_id": strconv.FormatInt(goalUserID, 10)},
 		MessageCode:    commonmodel.MessageCode_GroupReleaseMute,
 	}
 	_, _, err = tool.SendKafkaGroupNotice(m.groupNoticeTopic, groupNoticeMessage)

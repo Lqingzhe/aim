@@ -22,14 +22,9 @@ func GetCommonConfig(data []byte) commonmodel.CommonConfig {
 	newConfig := struct {
 		CommonConfig commonmodel.CommonConfig `yaml:"common_config"`
 	}{}
-
-	newConfig.CommonConfig.KafkaConfig.Broker = make([]string, 0, 100)
-
 	if err := yaml.Unmarshal(data, &newConfig); err != nil {
 		log.Fatalf("Unmarshal Common Config Failed: %v", err)
 	}
-	log.Printf("newConfig:%s\n", newConfig)
-	log.Printf("2newConfig:%+v\n", newConfig.CommonConfig)
 	return newConfig.CommonConfig
 }
 func GetMysqlConfig(data []byte) commonmodel.MysqlConfig {

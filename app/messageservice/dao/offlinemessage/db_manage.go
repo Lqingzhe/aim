@@ -20,6 +20,7 @@ func NewStruct(UserAndDeviceID []string, Operates ...operate) *MessageInfo {
 		OfflineMessageInfo: model.OfflineMessageInfo{
 			UserAndDeviceID: UserAndDeviceID,
 		},
+		Info: make([]*model.OfflineMessageInfo, 0),
 	}
 	for _, Operate := range Operates {
 		Operate(newStruct)

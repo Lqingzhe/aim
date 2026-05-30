@@ -10,4 +10,5 @@ type Config struct {
 	DBConfig
 	commonmodel.LimiterConfig
 	commonmodel.TokenConfig
+	commonmodel.KafkaConfig
 }

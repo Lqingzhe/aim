@@ -9,8 +9,9 @@ import (
 	commonconfig "aim/pkg/config"
 	"aim/pkg/id"
 	newlog "aim/pkg/log"
+	"net"
+	"strconv"
 
-	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
 )
 
@@ -27,25 +28,37 @@ func main() {
 	defer dao.CloseDB(dbContext)
 	commonconfig.AutoMysql(dbContext.Mysql, &model.UserInfo{}, &model.UserLoginInfo{}, &model.RemarkInfo{})
 
+	//listener, err := net.Listen("tcp", Config.ServiceConfig.Host+":"+strconv.FormatInt(Config.ServiceConfig.Port, 10))
+	addr, err := net.ResolveTCPAddr("tcp", Config.ServiceConfig.ServiceAddr.Host+":"+strconv.FormatInt(Config.ServiceAddr.Port, 10))
+	if err != nil {
+		newlog.LogInitFatal(logger, err, "Make Addr Failed")
+	}
+
 	svr := kitexuserservice.NewServer(
 		handler.NewUserServiceImpl(
 			snowNode,
 			dbContext,
 			logger,
 			Config.UserConfig,
-			int64(Config.EquipID),
 		),
-		server.WithServerBasicInfo(
-			&rpcinfo.EndpointBasicInfo{
-				ServiceName: "user-service",
-			},
-		),
-		commonconfig.RegisterService(
-			Config.NacosConfig,
-			logger,
-		),
+		//server.WithServerBasicInfo(
+		//	&rpcinfo.EndpointBasicInfo{
+		//		ServiceName: "user_service",
+		//	},
+		//),
+
+		//server.WithListener(listener),
+		//server.WithServiceAddr(&net.TCPAddr{
+		//	IP:   net.ParseIP(Config.ServiceConfig.Host),
+		//	Port: int(Config.ServiceConfig.Port),
+		//}),
+		server.WithServiceAddr(addr),
+		//commonconfig.RegisterService(
+		//	Config.NacosConfig,
+		//	logger,
+		//),
 	)
-	err := svr.Run()
+	err = svr.Run()
 	if err != nil {
 		newlog.LogInitFatal(logger, err, "Grcp Begin Error")
 	}

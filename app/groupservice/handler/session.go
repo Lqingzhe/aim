@@ -9,7 +9,10 @@ import (
 )
 
 func (s *GroupServiceImpl) CreatSession(ctx context.Context, req *kitexgroupservice.CreatSessionReq) (resp *kitexgroupservice.CreatSessionResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewSession(req.CommonInfo.Trace, s.SystemTopic, s.DBContext, s.SnowNode, s.ServiceClient)
 	sessionID, err := serviceStruct.CreatSession(ctx, req.UserId, req.GoalUserId)
 	if err != nil {
@@ -27,7 +30,10 @@ func (s *GroupServiceImpl) CreatSession(ctx context.Context, req *kitexgroupserv
 
 // DeleteSession implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) DeleteSession(ctx context.Context, req *kitexgroupservice.DeleteSessionReq) (resp *kitexgroupservice.DeleteSessionResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewSession(req.CommonInfo.Trace, s.SystemTopic, s.DBContext, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.DeleteSession(ctx, req.SessionId, req.UserId)
 	if err != nil {
@@ -42,7 +48,10 @@ func (s *GroupServiceImpl) DeleteSession(ctx context.Context, req *kitexgroupser
 
 // GetFriendLastVisitTime implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) GetFriendLastVisitTime(ctx context.Context, req *kitexgroupservice.GetFriendLastVisitTimeReq) (resp *kitexgroupservice.GetFriendLastVisitTimeResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewSession(req.CommonInfo.Trace, s.SystemTopic, s.DBContext, s.SnowNode, s.ServiceClient)
 	lastVisitTimeString, err := serviceStruct.GetFriendLastVisitTime(ctx, req.SessionId, req.GoalUserId)
 	if err != nil {
@@ -60,7 +69,10 @@ func (s *GroupServiceImpl) GetFriendLastVisitTime(ctx context.Context, req *kite
 
 // ApplyForFriend implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) ApplyForFriend(ctx context.Context, req *kitexgroupservice.ApplyForFriendReq) (resp *kitexgroupservice.ApplyForFriendResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewSession(req.CommonInfo.Trace, s.SystemTopic, s.DBContext, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.ApplyForFriend(ctx, req.UserId, req.GoalUserId)
 	if err != nil {
@@ -75,7 +87,10 @@ func (s *GroupServiceImpl) ApplyForFriend(ctx context.Context, req *kitexgroupse
 
 // GetFriendApplyList implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) GetFriendApplyList(ctx context.Context, req *kitexgroupservice.GetFriendApplyListReq) (resp *kitexgroupservice.GetFriendApplyListResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewSession(req.CommonInfo.Trace, s.SystemTopic, s.DBContext, s.SnowNode, s.ServiceClient)
 	applyUserIDList, err := serviceStruct.GetFriendApplyList(ctx, req.UserId)
 	if err != nil {
@@ -87,12 +102,16 @@ func (s *GroupServiceImpl) GetFriendApplyList(ctx context.Context, req *kitexgro
 	resp = &kitexgroupservice.GetFriendApplyListResp{
 		ApplyUserIdList: applyUserIDList,
 	}
-	return
+	newlog.Log(logger, newerror.LevelInfo, "GetFriendApplyList")
+	return resp, nil
 }
 
 // RefuseFriendApply implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) RefuseFriendApply(ctx context.Context, req *kitexgroupservice.RefuseFriendApplyReq) (resp *kitexgroupservice.RefuseFriendApplyResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewSession(req.CommonInfo.Trace, s.SystemTopic, s.DBContext, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.RefuseFriendApply(ctx, req.UserId, req.GoalUserId)
 	if err != nil {

@@ -26,7 +26,9 @@ func NewConsumerService(websocketStruct *WebSocketStruct, MessageClient kitexmes
 }
 func (c *Consumer) Consumer(msg *sarama.ConsumerMessage) (err *newerror.Error) {
 	defer func(trace string) {
-		err = err.AddErrorTrace(trace)
+		if err != nil {
+			err = err.AddErrorTrace(trace).(*newerror.Error)
+		}
 	}("consumer:Consumer")
 	var base struct {
 		TraceID    string

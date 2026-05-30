@@ -9,7 +9,10 @@ import (
 )
 
 func (s *GroupServiceImpl) GetGroupInfo(ctx context.Context, req *kitexgroupservice.GetGroupInfoReq) (resp *kitexgroupservice.GetGroupInfoResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	groupInfo, err := serviceStruct.GetGroupInfo(ctx, req.GroupId)
 	if err != nil {
@@ -28,7 +31,10 @@ func (s *GroupServiceImpl) GetGroupInfo(ctx context.Context, req *kitexgroupserv
 
 // ChangeGroupInfo implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) ChangeGroupInfo(ctx context.Context, req *kitexgroupservice.ChangeGroupInfoReq) (resp *kitexgroupservice.ChangeGroupInfoResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.ChangeGroupInfo(ctx, req.GroupId, req.UserId, req.GroupName)
 	if err != nil {
@@ -43,7 +49,10 @@ func (s *GroupServiceImpl) ChangeGroupInfo(ctx context.Context, req *kitexgroups
 
 // SearchGroup implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) SearchGroup(ctx context.Context, req *kitexgroupservice.SearchGroupReq) (resp *kitexgroupservice.SearchGroupResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	groupID, err := serviceStruct.SearchGroup(ctx, req.GroupName)
 	if err != nil {
@@ -61,7 +70,10 @@ func (s *GroupServiceImpl) SearchGroup(ctx context.Context, req *kitexgroupservi
 
 // CreateGroup implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) CreateGroup(ctx context.Context, req *kitexgroupservice.CreateGroupReq) (resp *kitexgroupservice.CreateGroupResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	groupID, err := serviceStruct.CreateGroup(ctx, req.UserId, req.GroupName)
 	if err != nil {
@@ -79,7 +91,10 @@ func (s *GroupServiceImpl) CreateGroup(ctx context.Context, req *kitexgroupservi
 
 // DeleteGroup implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) DeleteGroup(ctx context.Context, req *kitexgroupservice.DeleteGroupReq) (resp *kitexgroupservice.DeleteGroupResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.DeleteGroup(ctx, req.UserId, req.GroupId)
 	if err != nil {
@@ -94,7 +109,10 @@ func (s *GroupServiceImpl) DeleteGroup(ctx context.Context, req *kitexgroupservi
 
 // LeaveGroup implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) LeaveGroup(ctx context.Context, req *kitexgroupservice.LeaveGroupReq) (resp *kitexgroupservice.LeaveGroupResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.LeaveGroup(ctx, req.GroupId, req.UserId)
 	if err != nil {
@@ -109,7 +127,10 @@ func (s *GroupServiceImpl) LeaveGroup(ctx context.Context, req *kitexgroupservic
 
 // SetGroupApply implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) SetGroupApply(ctx context.Context, req *kitexgroupservice.SetGroupApplyReq) (resp *kitexgroupservice.SetGroupApplyResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.SetGroupApply(ctx, req.GroupId, req.UserId)
 	if err != nil {
@@ -124,7 +145,10 @@ func (s *GroupServiceImpl) SetGroupApply(ctx context.Context, req *kitexgroupser
 
 // GetGroupApplyList implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) GetGroupApplyList(ctx context.Context, req *kitexgroupservice.GetGroupApplyListReq) (resp *kitexgroupservice.GetGroupApplyListResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	applyUserIDList, err := serviceStruct.GetGroupApplyList(ctx, req.GroupId, req.UserId)
 	if err != nil {
@@ -142,7 +166,10 @@ func (s *GroupServiceImpl) GetGroupApplyList(ctx context.Context, req *kitexgrou
 
 // GetLastVisitTime implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) GetLastVisitTime(ctx context.Context, req *kitexgroupservice.GetLastVisitTimeReq) (resp *kitexgroupservice.GetLastVisitTimeResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	userIDList, lastVisitTimeList, err := serviceStruct.GetLastVisitTime(ctx, req.GroupId, req.UserId)
 	if err != nil {
@@ -159,7 +186,10 @@ func (s *GroupServiceImpl) GetLastVisitTime(ctx context.Context, req *kitexgroup
 	return resp, nil
 }
 func (s *GroupServiceImpl) SetLastVisitTime(ctx context.Context, req *kitexgroupservice.SetLastVisitTimeReq) (resp *kitexgroupservice.SetLastVisitTimeResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewUserInfoOfGroup(s.DBContext)
 	err = serviceStruct.SetLastVisitTime(ctx, req.UserId, req.GroupId)
 	if err != nil {
@@ -174,7 +204,10 @@ func (s *GroupServiceImpl) SetLastVisitTime(ctx context.Context, req *kitexgroup
 
 // AgreeGroupApply implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) AgreeGroupApply(ctx context.Context, req *kitexgroupservice.AgreeGroupApplyReq) (resp *kitexgroupservice.AgreeGroupApplyResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.AgreeGroupApply(ctx, req.GroupId, req.UserId, req.GoalUserId)
 	if err != nil {
@@ -187,7 +220,10 @@ func (s *GroupServiceImpl) AgreeGroupApply(ctx context.Context, req *kitexgroups
 	return &kitexgroupservice.AgreeGroupApplyResp{}, nil
 }
 func (s *GroupServiceImpl) RefuseGroupApply(ctx context.Context, req *kitexgroupservice.RefuseGroupApplyReq) (resp *kitexgroupservice.RefuseGroupApplyResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.AgreeGroupApply(ctx, req.GroupId, req.UserId, req.GoalUserId)
 	if err != nil {
@@ -202,7 +238,10 @@ func (s *GroupServiceImpl) RefuseGroupApply(ctx context.Context, req *kitexgroup
 
 // TransformGroupOwner implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) TransformGroupOwner(ctx context.Context, req *kitexgroupservice.TransformGroupOwnerReq) (resp *kitexgroupservice.TransformGroupOwnerResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.TransformGroupOwner(ctx, req.GroupId, req.UserId, req.GoalUserId)
 	if err != nil {
@@ -217,7 +256,10 @@ func (s *GroupServiceImpl) TransformGroupOwner(ctx context.Context, req *kitexgr
 
 // KickOutGroup implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) KickOutGroup(ctx context.Context, req *kitexgroupservice.KickOutGroupReq) (resp *kitexgroupservice.KickOutGroupResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.KickOutGroup(ctx, req.UserId, req.GoalUserId, req.GroupId)
 	if err != nil {
@@ -232,7 +274,10 @@ func (s *GroupServiceImpl) KickOutGroup(ctx context.Context, req *kitexgroupserv
 
 // SetManager implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) SetManager(ctx context.Context, req *kitexgroupservice.SetManagerReq) (resp *kitexgroupservice.SetManagerResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.SetManager(ctx, req.UserId, req.GoalUserId, req.GroupId)
 	if err != nil {
@@ -247,7 +292,10 @@ func (s *GroupServiceImpl) SetManager(ctx context.Context, req *kitexgroupservic
 
 // RevokeManager implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) RevokeManager(ctx context.Context, req *kitexgroupservice.RevokeManagerReq) (resp *kitexgroupservice.RevokeManagerResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.RevokeManager(ctx, req.UserId, req.GoalUserId, req.GroupId)
 	if err != nil {
@@ -262,7 +310,10 @@ func (s *GroupServiceImpl) RevokeManager(ctx context.Context, req *kitexgroupser
 
 // GetGroupInfoWithUser implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) GetGroupInfoWithUser(ctx context.Context, req *kitexgroupservice.GetGroupInfoWithUserReq) (resp *kitexgroupservice.GetGroupInfoWithUserResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	groupWithUserInfo, err := serviceStruct.GetGroupInfoWithUser(ctx, req.GroupId, req.UserId)
 	if err != nil {
@@ -282,7 +333,10 @@ func (s *GroupServiceImpl) GetGroupInfoWithUser(ctx context.Context, req *kitexg
 
 // UpdateGroupInfoWithUser implements the GroupServiceImpl interface.
 func (s *GroupServiceImpl) UpdateGroupInfoWithUser(ctx context.Context, req *kitexgroupservice.UpdateGroupInfoWithUserReq) (resp *kitexgroupservice.UpdateGroupInfoWithUserResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	err = serviceStruct.UpdateGroupInfoWithUser(ctx, req.UserId, req.GroupId, req.GroupRemarkName)
 	if err != nil {
@@ -295,7 +349,10 @@ func (s *GroupServiceImpl) UpdateGroupInfoWithUser(ctx context.Context, req *kit
 	return &kitexgroupservice.UpdateGroupInfoWithUserResp{}, nil
 }
 func (s *GroupServiceImpl) GetGroupUserID(ctx context.Context, req *kitexgroupservice.GetGroupUserIDReq) (resp *kitexgroupservice.GetGroupUserIDResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
 	userListID, err := serviceStruct.GetGroupUserID(ctx, req.GroupId, req.UserId)
 	if err != nil {

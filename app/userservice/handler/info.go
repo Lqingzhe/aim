@@ -10,13 +10,16 @@ import (
 )
 
 func (s *UserServiceImpl) GetUserInfo(ctx context.Context, req *kitexuserservice.GetUserInfoReq) (resp *kitexuserservice.GetUserInfoResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewUserInfo(s.DBContext, &model.UserInfo{
 		UserID: req.UserId,
 	}, nil)
 	result, err := serviceStruct.GetOtherUserInfo(ctx)
 	if err != nil {
-		err2 := newerror.TranslateError(err).AddErrorTrace("info:GetUserInfo")
+		err2 := newerror.TranslateError(err)
 		newlog.Log(logger, err2.LogLevel, "GetUserInfo")
 		return nil, err
 	}
@@ -27,13 +30,16 @@ func (s *UserServiceImpl) GetUserInfo(ctx context.Context, req *kitexuserservice
 
 // GetOtherUserInfo implements the UserServiceImpl interface.
 func (s *UserServiceImpl) GetOtherUserInfo(ctx context.Context, req *kitexuserservice.GetOtherUserInfoReq) (resp *kitexuserservice.GetOtherUserInfoResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewUserInfo(s.DBContext, &model.UserInfo{
 		UserID: req.GoalUserId,
 	}, nil)
 	result, err := serviceStruct.GetOtherUserInfo(ctx)
 	if err != nil {
-		err2 := newerror.TranslateError(err).AddErrorTrace("info:GetOtherUserInfo")
+		err2 := newerror.TranslateError(err)
 		newlog.AddError(logger, err, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "GetOtherUserInfo")
 		return nil, err
@@ -45,7 +51,10 @@ func (s *UserServiceImpl) GetOtherUserInfo(ctx context.Context, req *kitexuserse
 
 // UpdateUserInfo implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UpdateUserInfo(ctx context.Context, req *kitexuserservice.UpdateUserInfoReq) (resp *kitexuserservice.UpdateUserInfoResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 
 	serviceStruct := service.NewUserInfo(s.DBContext, &model.UserInfo{
 		UserID:        req.UserInfo.UserID,
@@ -57,7 +66,7 @@ func (s *UserServiceImpl) UpdateUserInfo(ctx context.Context, req *kitexuserserv
 	}, nil)
 	err = serviceStruct.UpdateUserInfo(ctx, s.UserConfig)
 	if err != nil {
-		err2 := newerror.TranslateError(err).AddErrorTrace("info:UpdateUserInfo")
+		err2 := newerror.TranslateError(err)
 		newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "UpdateUserInfo")
 		return nil, err
@@ -68,7 +77,10 @@ func (s *UserServiceImpl) UpdateUserInfo(ctx context.Context, req *kitexuserserv
 
 // Remark implements the UserServiceImpl interface.
 func (s *UserServiceImpl) Remark(ctx context.Context, req *kitexuserservice.RemarkReq) (resp *kitexuserservice.RemarkResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 
 	serviceStruct := service.NewUserInfo(s.DBContext, nil, &model.RemarkInfo{
 		UserID:     req.RemarkInfo.UserID,
@@ -77,7 +89,7 @@ func (s *UserServiceImpl) Remark(ctx context.Context, req *kitexuserservice.Rema
 	})
 	err = serviceStruct.Remark(ctx, s.UserConfig)
 	if err != nil {
-		err2 := newerror.TranslateError(err).AddErrorTrace("info:Remark")
+		err2 := newerror.TranslateError(err)
 		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "Remark")
 		return nil, err

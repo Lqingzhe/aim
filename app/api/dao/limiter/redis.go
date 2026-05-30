@@ -43,6 +43,9 @@ func getRedis(ctx context.Context, dbContext *model.DBContext, Info *Limiter) (e
 		}
 		return false, newerror.MakeError(http.StatusInternalServerError, newerror.CodeDatabaseError, "Database Error", err, newerror.LevelError)
 	}
+	if result["last_time"] == "" || result["last_tokens"] == "" {
+		return false, nil
+	}
 	Info.Info = &model.LimiterInfo{
 		UserID:   Info.UserID,
 		DeviceID: Info.DeviceID,

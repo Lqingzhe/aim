@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IM 即时通讯 - 登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 420px;
+            max-width: 90%;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 16px;
+            cursor: pointer;
+            background: #f9fafb;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-panel {
+            padding: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+        }
+
+        .message {
+            margin-top: 16px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #dc2626;
+            display: block;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #059669;
+            display: block;
+        }
+
+        .result-area {
+            margin-top: 20px;
+            padding: 12px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .device-info {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="tabs">
+        <button class="tab active" data-tab="login">登录</button>
+        <button class="tab" data-tab="register">注册</button>
+    </div>
+
+    <div id="login-panel" class="form-panel">
+        <div class="form-group">
+            <label>用户ID</label>
+            <input type="text" id="login-user-id" placeholder="请输入用户ID">
+        </div>
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="login-password" placeholder="请输入密码">
+        </div>
+        <div class="form-group">
+            <label>设备ID</label>
+            <input type="text" id="device-id" value="web-001" placeholder="设备ID">
+        </div>
+        <button class="btn" id="btn-login">登录</button>
+        <div id="login-message" class="message"></div>
+    </div>
+
+    <div id="register-panel" class="form-panel hidden">
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="reg-password" placeholder="请输入密码">
+        </div>
+        <div class="form-group">
+            <label>确认密码</label>
+            <input type="password" id="reg-confirm" placeholder="请再次输入密码">
+        </div>
+        <div class="form-group">
+            <label>设备ID</label>
+            <input type="text" id="reg-device-id" value="web-001" placeholder="设备ID">
+        </div>
+        <button class="btn" id="btn-register">注册</button>
+        <div id="register-message" class="message"></div>
+        <div id="register-result" class="result-area hidden">
+            <strong>注册成功！</strong><br>
+            您的用户ID: <span id="new-user-id" style="font-weight:bold;color:#667eea;"></span>
+        </div>
+    </div>
+
+    <div class="device-info">
+        💡 提示：用户ID会自动保存为字符串，请完整复制
+    </div>
+</div>
+
+<script>
+    const API_BASE = window.location.origin;
+
+    function showMessage(element, text, isError = true) {
+        element.textContent = text;
+        element.className = isError ? 'message error' : 'message success';
+        setTimeout(() => {
+            element.className = 'message';
+        }, 3000);
+    }
+
+    document.getElementById('btn-register').addEventListener('click', async () => {
+        const password = document.getElementById('reg-password').value;
+        const confirm = document.getElementById('reg-confirm').value;
+        const deviceID = document.getElementById('reg-device-id').value;
+        const messageEl = document.getElementById('register-message');
+        const resultEl = document.getElementById('register-result');
+
+        if (!password) {
+            showMessage(messageEl, '请输入密码', true);
+            return;
+        }
+        if (password !== confirm) {
+            showMessage(messageEl, '两次密码输入不一致', true);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/user/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password })
+            });
+            const data = await response.json();
+
+            if (data.code === 0 && data.data?.user_info?.user_id) {
+                const userId = String(data.data.user_info.user_id);
+                document.getElementById('new-user-id').textContent = userId;
+                resultEl.classList.remove('hidden');
+                document.getElementById('login-user-id').value = userId;
+                document.getElementById('device-id').value = deviceID;
+                showMessage(messageEl, '注册成功！', false);
+                document.querySelector('[data-tab="login"]').click();
+            } else {
+                showMessage(messageEl, data.message || '注册失败', true);
+            }
+        } catch (error) {
+            showMessage(messageEl, '网络错误: ' + error.message, true);
+        }
+    });
+
+    document.getElementById('btn-login').addEventListener('click', async () => {
+        const userId = String(document.getElementById('login-user-id').value).trim();
+        const password = document.getElementById('login-password').value;
+        const deviceID = document.getElementById('device-id').value;
+        const messageEl = document.getElementById('login-message');
+
+        if (!userId || !password) {
+            showMessage(messageEl, '请填写用户ID和密码', true);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/user/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Device-ID': deviceID
+                },
+                body: JSON.stringify({
+                    user_id: String(userId),
+                    password: password
+                })
+            });
+            const data = await response.json();
+
+            if (data.code === 0 && data.data?.token_info) {
+                localStorage.setItem('access_token', data.data.token_info.access_token);
+                localStorage.setItem('refresh_token', data.data.token_info.refresh_token);
+                localStorage.setItem('user_id', userId);
+                localStorage.setItem('device_id', deviceID);
+                showMessage(messageEl, '登录成功，正在跳转...', false);
+                setTimeout(() => {
+                    window.location.href = '/chat';
+                }, 500);
+            } else {
+                showMessage(messageEl, data.message || '登录失败', true);
+            }
+        } catch (error) {
+            showMessage(messageEl, '网络错误: ' + error.message, true);
+        }
+    });
+
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('login-panel').classList.toggle('hidden', target !== 'login');
+            document.getElementById('register-panel').classList.toggle('hidden', target !== 'register');
+        });
+    });
+</script>
+</body>
+</html>

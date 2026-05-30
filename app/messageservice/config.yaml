@@ -13,8 +13,9 @@ common_config:
 
 service_config:
   timeout: 10s
-  host: "localhost"
-  port: 8891
+  service_addr:
+    host: "localhost"
+    port: 8891
 
 message_config:
   max_message_byte_length: 5000

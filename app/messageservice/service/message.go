@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -53,8 +54,8 @@ func judgeExistInGroupAndMute(ctx context.Context, m *MessageService, groupID in
 		UserId:  userID,
 	}
 	GetGroupOrSessionRoleAndExistResp, err := m.serviceClient.GroupService.GetGroupOrSessionRoleAndExist(ctx, &GetGroupOrSessionRoleAndExistReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return finalErr
 	}
 	if !GetGroupOrSessionRoleAndExistResp.Exist {
 		return newerror.MakeError(http.StatusNotFound, newerror.CodeResourceNotFound, "The Group Is Not Exist", fmt.Errorf("Try To Send Message To Unjoin Group"), newerror.LevelInfo)
@@ -67,8 +68,9 @@ func judgeExistInGroupAndMute(ctx context.Context, m *MessageService, groupID in
 		UserId:  userID,
 	}
 	GetMuteStatusResp, err := m.serviceClient.GroupService.GetMuteStatus(ctx, &GetMuteStatusReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return err
+
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return finalErr
 	}
 	if GetMuteStatusResp.IsMute {
 		muteReason := GetMuteStatusResp.MuteReason
@@ -87,8 +89,8 @@ func sendNewMessageNoticeToGroupMember(ctx context.Context, m *MessageService, g
 		UserId:  userID,
 	}
 	GetGroupUserIDResp, err := m.serviceClient.GroupService.GetGroupUserID(ctx, GetGroupUserIDReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return finalErr
 	}
 	//广播
 	groupMessageStruct := commonmodel.KafkaNewMessageNotice{
@@ -124,8 +126,9 @@ func (m *MessageService) SendMessage(ctx context.Context, groupID int64, userID 
 				UserId:     id,
 			}
 			Resp, err := m.serviceClient.GroupService.GetGroupOrSessionRoleAndExist(ctx, &GetGroupOrSessionRoleAndExistReq)
-			if newerror.WhetherInterrupt(err, &finalErr) {
-				return 0, err
+
+			if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+				return 0, finalErr
 			}
 			if Resp.Exist {
 				goalUserList = append(goalUserList, id)
@@ -136,8 +139,8 @@ func (m *MessageService) SendMessage(ctx context.Context, groupID int64, userID 
 			SendTimeSecond: time.Now().Unix(),
 			GoalUserID:     goalUserList,
 			Data: map[string]interface{}{
-				"group_id": groupID,
-				"user_id":  userID,
+				"group_id": strconv.FormatInt(groupID, 10),
+				"user_id":  strconv.FormatInt(userID, 10),
 			},
 			MessageCode: commonmodel.MessageCode_GroupEmpphasizeMessage,
 		}
@@ -189,8 +192,8 @@ func (m *MessageService) SendFile(ctx context.Context, groupID int64, userID int
 		FileType:    string(commonmodel.FileType_File),
 	}
 	CreateFileResp, err := m.serviceClient.FileService.CreateFile(ctx, &CreateFileReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return 0, err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return 0, finalErr
 	}
 	fileStorageID := CreateFileResp.FileId
 	serviceStruct := message.NewStruct(groupID, messageID, userID, time.Now(), message.WithFileInfo(fileStorageID, contentType))
@@ -222,8 +225,8 @@ func (m *MessageService) SendVoice(ctx context.Context, groupID int64, userID in
 		VoiceDurationTimeSecond: voiceTimeSecond,
 	}
 	CreateFileResp, err := m.serviceClient.FileService.CreateFile(ctx, &CreateFileReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return 0, err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return 0, finalErr
 	}
 	fileStorageID := CreateFileResp.FileId
 	messageStruct := message.NewStruct(groupID, messageID, userID, time.Now(), message.WithVoiceInfo(voiceTimeSecond, fileStorageID, contentType))
@@ -253,8 +256,8 @@ func (m *MessageService) SendPicture(ctx context.Context, groupID int64, userID 
 		DataStream:  dataStream,
 	}
 	CreateFileResp, err := m.serviceClient.FileService.CreateFile(ctx, &CreateFileReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return 0, err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return 0, finalErr
 	}
 	fileStorageID := CreateFileResp.FileId
 	messageStruct := message.NewStruct(groupID, messageID, userID, time.Now(), message.WithPictureInfo(fileStorageID, contentType))
@@ -297,8 +300,8 @@ func (m *MessageService) WithdrawMessage(ctx context.Context, groupID int64, use
 		FileId: messageStruct.Info[0].FileStorageID,
 	}
 	_, err = m.serviceClient.FileService.DeleteFile(ctx, &DeleteFileReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return finalErr
 	}
 	GetGroupUserIDReq := &kitexgroupservice.GetGroupUserIDReq{
 		CommonInfo: &kitexcommonmodel.CommonInfo{
@@ -370,8 +373,8 @@ func (m *MessageService) GetNewMessage(ctx context.Context, groupID int64, userI
 		UserId:  userID,
 	}
 	GetGroupOrSessionRoleAndExistResp, err := m.serviceClient.GroupService.GetGroupOrSessionRoleAndExist(ctx, &GetGroupOrSessionRoleAndExistReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return nil, nil, nil, nil, err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return nil, nil, nil, nil, finalErr
 	}
 	if !GetGroupOrSessionRoleAndExistResp.Exist {
 		return nil, nil, nil, nil, newerror.MakeError(http.StatusNotFound, newerror.CodeResourceNotFound, "The Group Is Not Exist", fmt.Errorf("Try To Send Message To Unjoin Group"), newerror.LevelInfo)
@@ -382,8 +385,8 @@ func (m *MessageService) GetNewMessage(ctx context.Context, groupID int64, userI
 		UserId:     userID,
 	}
 	getLastVisitTimeResp, err := m.serviceClient.GroupService.GetLastVisitTime(ctx, getLastVisitTimeReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return nil, nil, nil, nil, err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return nil, nil, nil, nil, finalErr
 	}
 	var LastVisitTime int64
 	for i := range getLastVisitTimeResp.UserIdList {
@@ -394,8 +397,8 @@ func (m *MessageService) GetNewMessage(ctx context.Context, groupID int64, userI
 	}
 	messageStruct := message.NewStruct(groupID, 0, 0, time.Time{}, message.GetWithStartAndEndTime(time.Unix(LastVisitTime, 0), time.Time{}), message.GetWithGroupID)
 	exist, err := dao.Get(ctx, messageStruct, m.dbContext)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return nil, nil, nil, nil, err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return nil, nil, nil, nil, finalErr
 	}
 	if !exist {
 		return nil, nil, nil, nil, newerror.MakeError(http.StatusNotFound, newerror.CodeResourceNotFound, "You No Not Have New Message", fmt.Errorf("Try To Get New Message Without Any One New"), newerror.LevelInfo)
@@ -406,8 +409,8 @@ func (m *MessageService) GetNewMessage(ctx context.Context, groupID int64, userI
 		GroupId:    groupID,
 	}
 	_, err = m.serviceClient.GroupService.SetLastVisitTime(ctx, &setLastVisitTimeReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return nil, nil, nil, nil, err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return nil, nil, nil, nil, finalErr
 	}
 	messageID = make([]int64, 0, len(messageStruct.Info))
 	messageType = make([]string, 0, len(messageStruct.Info))
@@ -434,8 +437,8 @@ func (m *MessageService) GetFileContent(ctx context.Context, groupID int64, user
 		UserId:  userID,
 	}
 	GetGroupOrSessionRoleAndExistResp, err := m.serviceClient.GroupService.GetGroupOrSessionRoleAndExist(ctx, &GetGroupOrSessionRoleAndExistReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return nil, "", err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return nil, "", finalErr
 	}
 	if !GetGroupOrSessionRoleAndExistResp.Exist {
 		return nil, "", newerror.MakeError(http.StatusNotFound, newerror.CodeResourceNotFound, "The Group Is Not Exist", fmt.Errorf("Try To Send Message To Unjoin Group"), newerror.LevelInfo)

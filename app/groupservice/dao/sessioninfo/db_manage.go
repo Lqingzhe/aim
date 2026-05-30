@@ -14,9 +14,9 @@ type SessionInfo struct {
 	whereWithUserID     bool
 	whereWithGoalUserID bool
 }
-type option func(*SessionInfo)
+type operation func(*SessionInfo)
 
-func NewStruct(SessionID int64, UserID int64, GoalUserID int64, Options ...option) *SessionInfo {
+func NewStruct(SessionID int64, UserID int64, GoalUserID int64, Operations ...operation) *SessionInfo {
 	newStruct := &SessionInfo{
 		SessionInfo: &model.SessionInfo{
 			SessionID:  SessionID,
@@ -25,8 +25,10 @@ func NewStruct(SessionID int64, UserID int64, GoalUserID int64, Options ...optio
 		},
 		Info: []*model.SessionInfo{},
 	}
-	for _, Option := range Options {
-		Option(newStruct)
+	if len(Operations) > 0 {
+		for _, Operate := range Operations {
+			Operate(newStruct)
+		}
 	}
 	return newStruct
 }

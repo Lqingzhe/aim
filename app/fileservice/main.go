@@ -9,6 +9,8 @@ import (
 	commonconfig "aim/pkg/config"
 	"aim/pkg/id"
 	newlog "aim/pkg/log"
+	"net"
+	"strconv"
 
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
@@ -29,6 +31,11 @@ func main() {
 		&model.FileModel{},
 	)
 
+	addr, err := net.ResolveTCPAddr("tcp", Config.ServiceConfig.ServiceAddr.Host+":"+strconv.FormatInt(Config.ServiceAddr.Port, 10))
+	if err != nil {
+		newlog.LogInitFatal(logger, err, "Make Addr Failed")
+	}
+
 	svr := kitexfileservice.NewServer(
 		handler.NewFileServiceImpl(
 			Config.FileConfig,
@@ -37,15 +44,20 @@ func main() {
 		),
 		server.WithServerBasicInfo(
 			&rpcinfo.EndpointBasicInfo{
-				ServiceName: "file-service",
+				ServiceName: "file_service",
 			},
 		),
-		commonconfig.RegisterService(
-			Config.NacosConfig,
-			logger,
-		),
+		server.WithServiceAddr(addr),
+		//server.WithServiceAddr(&net.TCPAddr{
+		//	IP:   net.ParseIP(Config.ServiceConfig.Host),
+		//	Port: int(Config.ServiceConfig.Port),
+		//}),
+		//commonconfig.RegisterService(
+		//	Config.NacosConfig,
+		//	logger,
+		//),
 	)
-	err := svr.Run()
+	err = svr.Run()
 	if err != nil {
 		newlog.LogInitFatal(logger, err, "Grcp Begin Error")
 	}

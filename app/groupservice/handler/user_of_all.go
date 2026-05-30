@@ -9,7 +9,10 @@ import (
 )
 
 func (s *GroupServiceImpl) GetGroupAndSessionID(ctx context.Context, req *kitexgroupservice.GetGroupAndSessionIDReq) (resp *kitexgroupservice.GetGroupAndSessionIDResp, err error) {
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewUserInfoOfGroup(s.DBContext)
 	groupIDList, sessionIDList, err := serviceStruct.GetGroupAndSessionID(ctx, req.UserId)
 	if err != nil {
@@ -26,8 +29,11 @@ func (s *GroupServiceImpl) GetGroupAndSessionID(ctx context.Context, req *kitexg
 	return resp, nil
 }
 func (s *GroupServiceImpl) GetGroupOrSessionRoleAndExist(ctx context.Context, req *kitexgroupservice.GetGroupOrSessionRoleAndExistReq) (resp *kitexgroupservice.GetGroupOrSessionRoleAndExistResp, err error) {
+	defer func() {
+		err = newerror.TranslateError(err).MarshalError()
+	}()
 	var finalErr error
-	logger := newlog.AddTraceAndEquipID(s.Logger, req.CommonInfo.Trace, s.EquipID)
+	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewUserInfoOfGroup(s.DBContext)
 	role, exist, err := serviceStruct.GetGroupOrSessionExistAndRole(ctx, req.GroupId, req.UserId)
 	if err != nil {

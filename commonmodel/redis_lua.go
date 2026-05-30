@@ -13,22 +13,23 @@ func InitRedisScript() map[LuaOperate]*redis.Script {
 const (
 	HSETEX    LuaOperate = "HSETEX" //set多个个带有过期时间、hash类型的key，自带回滚。ARGV的第一个参数传入int类型的时间（ .Second转换,小于等于0则无过期时间），后续每连续两位为field的key和value。多个Key的field之间通过“###KEYS*GAP###”区分
 	HSETEXLua string     = `local keyGap = "###KEYS*GAP###"
-local expireTime = ARGV[1]
+local expireTime = tonumber(ARGV[1])
 local keyPos = 1
 local keyLen = #KEYS
 local argvPos = 2
 local argvLen = #ARGV
-if expireTime<=0 then
+if expireTime == nil or expireTime <= 0 then
 	expireTime = nil
+end
 while keyPos <= keyLen do
-	while argPos <= argvLen do
+	while argvPos <= argvLen do
 		if ARGV[argvPos] ~= keyGap then
-			local result = redis.pcall("HSET",KEYS[keyPos], ARGV[argvPos], ARGV[argvPos+1])
-			if type(result) == "table" and result.err ~= nil then
+			local hsetResult = redis.pcall("HSET",KEYS[keyPos], ARGV[argvPos], ARGV[argvPos+1])
+			if type(hsetResult) == "table" and hsetResult.err ~= nil then
 				for k = 1,keyPos do
 					redis.pcall("DEL",KEYS[k])
 				end
-				return redis.error_reply(result.err)
+				return redis.error_reply(hsetResult.err)
 			end
 			argvPos = argvPos + 2
 		else
@@ -37,17 +38,17 @@ while keyPos <= keyLen do
 		end
 	end
 	if expireTime and expireTime > 0 then
-		local result = redis.pcall("EXPIRE",KEYS[keyPos], expireTime)
-	end
-	if type(result) == "table" and result.err ~= nil then
-		for k = 1,keyPos do
-			redis.pcall("DEL",KEYS[k])
+		local expireResult = redis.pcall("EXPIRE",KEYS[keyPos], expireTime)
+		if type(expireResult) == "table" and expireResult.err ~= nil then
+			for k = 1,keyPos do
+				redis.pcall("DEL",KEYS[k])
+			end
+			return redis.error_reply(result.err)
 		end
-		return redis.error_reply(result.err)
 	end
 	keyPos = keyPos + 1
 end
-return `
+return "OK"`
 )
 const (
 	DELBLURRY    LuaOperate = "DELBlurry" //模糊删除匹配前缀的所有key，返回删除的数量
