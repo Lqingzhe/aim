@@ -7,6 +7,7 @@ import (
 	newerror "aim/pkg/error"
 	newlog "aim/pkg/log"
 	"context"
+	"strconv"
 )
 
 // SendMessage implements the KitexMessageServiceImpl interface.
@@ -129,9 +130,9 @@ func (s *KitexMessageServiceImpl) GetMessageList(ctx context.Context, req *kitex
 	MessageInfo := make([]*kitexcommonmodel.KitexMessageInfo, 0, len(messageList))
 	for _, v := range messageList {
 		MessageInfo = append(MessageInfo, &kitexcommonmodel.KitexMessageInfo{
-			GroupId:             v.GroupID,
-			UserId:              v.UserID,
-			MessageId:           v.MessageID,
+			GroupId:             strconv.FormatInt(v.GroupID, 10),
+			UserId:              strconv.FormatInt(v.UserID, 10),
+			MessageId:           strconv.FormatInt(v.MessageID, 10),
 			MessageContent:      v.MessageContent,
 			ContentType:         v.ContentType,
 			VoiceDurationSecond: v.VoiceDurationSecond,

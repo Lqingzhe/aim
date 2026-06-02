@@ -6852,6 +6852,20 @@ func (p *GetGroupAndSessionIDResp) FastRead(buf []byte) (int, error) {
 					goto SkipFieldError
 				}
 			}
+		case 3:
+			if fieldTypeId == thrift.LIST {
+				l, err = p.FastReadField3(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = thrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
 		default:
 			l, err = thrift.Binary.Skip(buf[offset:], fieldTypeId)
 			offset += l
@@ -6918,6 +6932,30 @@ func (p *GetGroupAndSessionIDResp) FastReadField2(buf []byte) (int, error) {
 	return offset, nil
 }
 
+func (p *GetGroupAndSessionIDResp) FastReadField3(buf []byte) (int, error) {
+	offset := 0
+
+	_, size, l, err := thrift.Binary.ReadListBegin(buf[offset:])
+	offset += l
+	if err != nil {
+		return offset, err
+	}
+	_field := make([]int64, 0, size)
+	for i := 0; i < size; i++ {
+		var _elem int64
+		if v, l, err := thrift.Binary.ReadI64(buf[offset:]); err != nil {
+			return offset, err
+		} else {
+			offset += l
+			_elem = v
+		}
+
+		_field = append(_field, _elem)
+	}
+	p.UserOfSessionIdList = _field
+	return offset, nil
+}
+
 func (p *GetGroupAndSessionIDResp) FastWrite(buf []byte) int {
 	return p.FastWriteNocopy(buf, nil)
 }
@@ -6927,6 +6965,7 @@ func (p *GetGroupAndSessionIDResp) FastWriteNocopy(buf []byte, w thrift.NocopyWr
 	if p != nil {
 		offset += p.fastWriteField1(buf[offset:], w)
 		offset += p.fastWriteField2(buf[offset:], w)
+		offset += p.fastWriteField3(buf[offset:], w)
 	}
 	offset += thrift.Binary.WriteFieldStop(buf[offset:])
 	return offset
@@ -6937,6 +6976,7 @@ func (p *GetGroupAndSessionIDResp) BLength() int {
 	if p != nil {
 		l += p.field1Length()
 		l += p.field2Length()
+		l += p.field3Length()
 	}
 	l += thrift.Binary.FieldStopLength()
 	return l
@@ -6970,6 +7010,20 @@ func (p *GetGroupAndSessionIDResp) fastWriteField2(buf []byte, w thrift.NocopyWr
 	return offset
 }
 
+func (p *GetGroupAndSessionIDResp) fastWriteField3(buf []byte, w thrift.NocopyWriter) int {
+	offset := 0
+	offset += thrift.Binary.WriteFieldBegin(buf[offset:], thrift.LIST, 3)
+	listBeginOffset := offset
+	offset += thrift.Binary.ListBeginLength()
+	var length int
+	for _, v := range p.UserOfSessionIdList {
+		length++
+		offset += thrift.Binary.WriteI64(buf[offset:], v)
+	}
+	thrift.Binary.WriteListBegin(buf[listBeginOffset:], thrift.I64, length)
+	return offset
+}
+
 func (p *GetGroupAndSessionIDResp) field1Length() int {
 	l := 0
 	l += thrift.Binary.FieldBeginLength()
@@ -6985,6 +7039,15 @@ func (p *GetGroupAndSessionIDResp) field2Length() int {
 	l += thrift.Binary.ListBeginLength()
 	l +=
 		thrift.Binary.I64Length() * len(p.SessionIdList)
+	return l
+}
+
+func (p *GetGroupAndSessionIDResp) field3Length() int {
+	l := 0
+	l += thrift.Binary.FieldBeginLength()
+	l += thrift.Binary.ListBeginLength()
+	l +=
+		thrift.Binary.I64Length() * len(p.UserOfSessionIdList)
 	return l
 }
 

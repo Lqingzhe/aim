@@ -38,3 +38,6 @@ messageService后：
 优化mute的缓存设置，缓存不管是读到空值还是真实值一律返回true，只有没查到才false
 
 ## 删除群聊私聊时调messageservice.DeleteMessageAllGroup删除聊天记录 ##
+
+debug：
+    1：解决GetNewMessage时无法SetLastVisitTime的问题，异常：（1）groupservice/service/user_of_all:setLastVisitTime中在加上日志后，没有被调用且日志无法打印，（2）在上一条的日志可以打印的时候，其调用的groupservice/dao/groupmember:Newstruct中打印的newStruct的LastReadTime字段无法赋值

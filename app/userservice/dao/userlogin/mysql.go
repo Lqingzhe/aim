@@ -49,7 +49,7 @@ func deleteMysql(ctx context.Context, dbContext *model2.DBContext, info *Login) 
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:DeleteMysql")
-	result := dbContext.Mysql.Client.WithContext(ctx).Delete(info.UserLoginInfo)
+	result := dbContext.Mysql.Client.WithContext(ctx).Where("user_id = ?", info.UserID).Delete(&info.UserLoginInfo)
 	if err2 := newerror.IsMysqlError(result); err2 != nil {
 		return err2
 	}

@@ -44,8 +44,16 @@ func (s *ServiceSession) CreatSession(ctx context.Context, userID int64, goalUse
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("session:CreatSession")
 	SessionID = s.snowFlack.Generate().Int64()
-	sessionStruct1 := sessioninfo.NewStruct(SessionID, userID, goalUserID)
-	sessionStruct2 := sessioninfo.NewStruct(SessionID, goalUserID, userID)
+	sessionStruct1 := sessioninfo.NewStruct(SessionID, userID, goalUserID, sessioninfo.WithGoalUserID, sessioninfo.WithUserID)
+	sessionStruct2 := sessioninfo.NewStruct(SessionID, goalUserID, userID, sessioninfo.WithGoalUserID, sessioninfo.WithUserID)
+	exist, err := dao.Get(ctx, sessionStruct1, s.dbContext)
+	if err != nil {
+		return 0, err
+	}
+	if exist {
+		return 0, newerror.MakeError(http.StatusTooManyRequests, newerror.CodeResourceDuplicate, "You Are Already Being Friends", fmt.Errorf("Try To Repeat Make Friend"), newerror.LevelInfo)
+	}
+
 	groupMemberStruct := groupmember.NewStruct(SessionID, []int64{userID, goalUserID}, nil)
 	DB := &model.DBContext{
 		Mysql: tool.BeginMysqlTransaction(s.dbContext.Mysql),
@@ -62,6 +70,18 @@ func (s *ServiceSession) CreatSession(ctx context.Context, userID int64, goalUse
 		return 0, err
 	}
 	err = dao.Add(ctx, groupMemberStruct, DB)
+	if err != nil {
+		DB.Mysql.Client.Rollback()
+		return 0, err
+	}
+	groupApplyStruct1 := groupapply.NewStruct(userID, goalUserID, groupapply.WithGoalID, groupapply.WithApplyUserID)
+	err = dao.Delete(ctx, groupApplyStruct1, s.dbContext)
+	if err != nil {
+		DB.Mysql.Client.Rollback()
+		return 0, err
+	}
+	groupApplyStruct2 := groupapply.NewStruct(goalUserID, userID, groupapply.WithGoalID, groupapply.WithApplyUserID)
+	err = dao.Delete(ctx, groupApplyStruct2, s.dbContext)
 	if err != nil {
 		DB.Mysql.Client.Rollback()
 		return 0, err
@@ -168,7 +188,7 @@ func (s *ServiceSession) ApplyForFriend(ctx context.Context, userID int64, goalU
 	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
 		return finalErr
 	}
-	groupApplyStruct := groupapply.NewStruct(userID, goalUserID)
+	groupApplyStruct := groupapply.NewStruct(goalUserID, userID)
 	exist, err := dao.Get(ctx, groupApplyStruct, s.dbContext)
 	if err != nil {
 		return err

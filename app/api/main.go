@@ -32,26 +32,26 @@ func main() {
 
 	UserClient := kitexuserservice.MustNewClient(
 		"user_service",
-		//commonconfig.ResolverService(Config.NacosConfig, logger),
-		client.WithHostPorts("127.0.0.1:8889"),
+		commonconfig.ResolverService(Config.NacosConfig, logger),
+		//client.WithHostPorts("127.0.0.1:8889"),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["user_service"].KitexTimeOut),
 	)
 	GroupClient := kitexgroupservice.MustNewClient(
 		"group_service",
-		//commonconfig.ResolverService(Config.NacosConfig, logger),
-		client.WithHostPorts("127.0.0.1:8890"),
+		commonconfig.ResolverService(Config.NacosConfig, logger),
+		//client.WithHostPorts("127.0.0.1:8890"),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["group_service"].KitexTimeOut),
 	)
 	FileClient := kitexfileservice.MustNewClient(
 		"file_service",
-		//commonconfig.ResolverService(Config.NacosConfig, logger),
-		client.WithHostPorts("127.0.0.1:8892"),
+		commonconfig.ResolverService(Config.NacosConfig, logger),
+		//client.WithHostPorts("127.0.0.1:8892"),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["file_service"].KitexTimeOut),
 	)
 	MessageClient := kitexmessageservice.MustNewClient(
 		"message_service",
-		//commonconfig.ResolverService(Config.NacosConfig, logger),
-		client.WithHostPorts("127.0.0.1:8891"),
+		commonconfig.ResolverService(Config.NacosConfig, logger),
+		//client.WithHostPorts("127.0.0.1:8891"),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["message_service"].KitexTimeOut),
 	)
 

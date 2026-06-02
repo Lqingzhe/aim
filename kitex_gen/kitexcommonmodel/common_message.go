@@ -7,9 +7,9 @@ import (
 )
 
 type KitexMessageInfo struct {
-	GroupId             int64  `thrift:"group_id,1" frugal:"1,default,i64" json:"group_id"`
-	MessageId           int64  `thrift:"message_id,2" frugal:"2,default,i64" json:"message_id"`
-	UserId              int64  `thrift:"user_id,3" frugal:"3,default,i64" json:"user_id"`
+	GroupId             string `thrift:"group_id,1" frugal:"1,default,string" json:"group_id"`
+	MessageId           string `thrift:"message_id,2" frugal:"2,default,string" json:"message_id"`
+	UserId              string `thrift:"user_id,3" frugal:"3,default,string" json:"user_id"`
 	MessageContent      string `thrift:"message_content,4" frugal:"4,default,string" json:"message_content"`
 	ContentType         string `thrift:"content_type,5" frugal:"5,default,string" json:"content_type"`
 	VoiceDurationSecond int64  `thrift:"voice_duration_second,6" frugal:"6,default,i64" json:"voice_duration_second"`
@@ -25,15 +25,15 @@ func NewKitexMessageInfo() *KitexMessageInfo {
 func (p *KitexMessageInfo) InitDefault() {
 }
 
-func (p *KitexMessageInfo) GetGroupId() (v int64) {
+func (p *KitexMessageInfo) GetGroupId() (v string) {
 	return p.GroupId
 }
 
-func (p *KitexMessageInfo) GetMessageId() (v int64) {
+func (p *KitexMessageInfo) GetMessageId() (v string) {
 	return p.MessageId
 }
 
-func (p *KitexMessageInfo) GetUserId() (v int64) {
+func (p *KitexMessageInfo) GetUserId() (v string) {
 	return p.UserId
 }
 
@@ -60,13 +60,13 @@ func (p *KitexMessageInfo) GetMessageType() (v string) {
 func (p *KitexMessageInfo) GetSendTimeSecond() (v int64) {
 	return p.SendTimeSecond
 }
-func (p *KitexMessageInfo) SetGroupId(val int64) {
+func (p *KitexMessageInfo) SetGroupId(val string) {
 	p.GroupId = val
 }
-func (p *KitexMessageInfo) SetMessageId(val int64) {
+func (p *KitexMessageInfo) SetMessageId(val string) {
 	p.MessageId = val
 }
-func (p *KitexMessageInfo) SetUserId(val int64) {
+func (p *KitexMessageInfo) SetUserId(val string) {
 	p.UserId = val
 }
 func (p *KitexMessageInfo) SetMessageContent(val string) {

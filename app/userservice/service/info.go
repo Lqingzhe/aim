@@ -11,6 +11,7 @@ import (
 	"aim/tool"
 	"fmt"
 	"net/http"
+	"time"
 
 	"context"
 )
@@ -87,7 +88,7 @@ func (i *Info) UpdateUserInfo(ctx context.Context, userConfig commonmodel.UserCo
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("info:UpdateUserInfo")
 
-	if day, month, year := i.UserInfo.BirthdayDay, i.UserInfo.BirthdayMonth, i.UserInfo.BirthdayYear; (day != 0 && month != 0 && year != 0) && (day > 31 || day < 0 || month < 0 || month > 12 || year > 1900) {
+	if day, month, year := int(i.UserInfo.BirthdayDay), int(i.UserInfo.BirthdayMonth), int(i.UserInfo.BirthdayYear); (day <= 0 || day > 31) || (month <= 0 || month > 12) || (year < 1900) || time.Now().Unix() < time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local).Unix() {
 		return newerror.MakeError(http.StatusBadRequest, newerror.CodeParamValueInvalid, "Invalid Parameter", fmt.Errorf("Unexpect Birthday"), newerror.LevelInfo)
 	}
 	if tool.CalculateLength(i.UserInfo.UserName) > userConfig.MaxUsernameLength {

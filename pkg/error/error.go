@@ -2,11 +2,12 @@ package newerror
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
-	"github.com/bytedance/sonic"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -22,9 +23,9 @@ type Error struct {
 	HttpCode    int    `json:"http_code"`
 	HttpMessage string `json:"http_message"`
 
-	StatusCode ErrorStatue   `json:"status_code"`
-	LogMessage error         `json:"log_message"`
-	LogLevel   zapcore.Level `json:"log_level"`
+	StatusCode int    `json:"status_code"`
+	LogMessage string `json:"log_message"`
+	LogLevel   int8   `json:"log_level"`
 
 	IsNeedInterrupt bool `json:"is_need_interrupt"`
 }
@@ -45,9 +46,19 @@ func UnMarshalError(err error) error {
 	if err == nil {
 		return nil
 	}
+	errStr := err.Error()
+
+	// 查找 JSON 开始位置
+	startIdx := strings.Index(errStr, "{")
+	if startIdx == -1 {
+		return MakeError(http.StatusInternalServerError, CodeInternalError, "Unmarshal Error Failed 1",
+			fmt.Errorf("no JSON found in error: %s", errStr), LevelError)
+	}
+
+	jsonPart := errStr[startIdx:]
 	err2 := &Error{}
-	if err3 := sonic.Unmarshal([]byte(err.Error()), err2); err3 != nil {
-		return MakeError(http.StatusInternalServerError, CodeInternalError, "Unmarshal Error Failed", fmt.Errorf("%s : %s", `raw error:`, err.Error()), LevelFatal).AddErrorTrace("error:Unmarshal Error").(*Error)
+	if err3 := json.Unmarshal([]byte(jsonPart), err2); err3 != nil {
+		return MakeError(http.StatusInternalServerError, CodeInternalError, "Unmarshal Error Failed 2", fmt.Errorf("%s : %s", `raw error:`, err.Error()), LevelFatal).AddErrorTrace("error:Unmarshal Error").(*Error)
 	}
 	return err2
 }
@@ -57,10 +68,10 @@ func WithContinueError(err *Error) {
 func MakeError(httpCode int, statueCode ErrorStatue, httpMessage string, err error, logLevel zapcore.Level, Operates ...operate) *Error {
 	newStruct := &Error{
 		HttpCode:        httpCode,
-		StatusCode:      statueCode,
+		StatusCode:      int(statueCode),
 		HttpMessage:     httpMessage,
-		LogMessage:      fmt.Errorf("-> %w", err),
-		LogLevel:        logLevel,
+		LogMessage:      fmt.Sprintf("-> %s", err.Error()),
+		LogLevel:        int8(logLevel),
 		IsNeedInterrupt: true,
 	}
 	for _, Operate := range Operates {
@@ -70,16 +81,16 @@ func MakeError(httpCode int, statueCode ErrorStatue, httpMessage string, err err
 }
 func MakeKafkaError(statueCode ErrorStatue, err error, logLevel zapcore.Level) *Error {
 	return &Error{
-		StatusCode: statueCode,
-		LogMessage: fmt.Errorf("-> %w", err),
-		LogLevel:   logLevel,
+		StatusCode: int(statueCode),
+		LogMessage: fmt.Sprintf("-> %s", err.Error()),
+		LogLevel:   int8(logLevel),
 	}
 }
 func (e *Error) Error() string {
-	if e == nil || e.LogMessage == nil {
+	if e == nil || e.LogMessage == "" {
 		return ""
 	}
-	return e.LogMessage.Error()
+	return e.LogMessage
 }
 func TranslateError(err error) *Error {
 	if err == nil {
@@ -104,7 +115,7 @@ func (e *Error) AddErrorTrace(trace string) error {
 	if e == nil {
 		return nil
 	}
-	e.LogMessage = fmt.Errorf(" %s /%w ", trace, e.LogMessage)
+	e.LogMessage = trace + " / " + e.LogMessage
 	return e
 }
 func (o *Option) OptionInfo() (uint64, string, string) {

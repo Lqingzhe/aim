@@ -18,7 +18,7 @@ body {
 
 /* 侧边栏 */
 .sidebar {
-    width: 300px;
+    width: 320px;
     background: white;
     border-right: 1px solid #e5e7eb;
     display: flex;
@@ -39,7 +39,7 @@ body {
 }
 
 .user-id {
-    font-size: 12px;
+    font-size: 11px;
     color: #6b7280;
     word-break: break-all;
 }
@@ -80,16 +80,6 @@ body {
     color: white;
 }
 
-.action-btn.success {
-    background: #d1fae5;
-    color: #10b981;
-}
-
-.action-btn.success:hover {
-    background: #10b981;
-    color: white;
-}
-
 /* 会话列表 */
 .session-list {
     flex: 1;
@@ -109,13 +99,15 @@ body {
 
 .session-item.active {
     background: #eef2ff;
-    border-left: 3px solid #667eea;
 }
 
 .session-name {
     font-weight: 500;
     margin-bottom: 4px;
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .session-preview {
@@ -124,6 +116,12 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.session-id {
+    font-size: 10px;
+    color: #9ca3af;
+    margin-top: 2px;
 }
 
 /* 聊天区域 */
@@ -148,19 +146,9 @@ body {
     font-size: 16px;
 }
 
-.chat-action-btn {
-    background: #eef2ff;
-    border: none;
-    padding: 4px 10px;
-    border-radius: 12px;
+.chat-id {
     font-size: 11px;
-    cursor: pointer;
-    color: #667eea;
-}
-
-.chat-action-btn:hover {
-    background: #667eea;
-    color: white;
+    color: #9ca3af;
 }
 
 /* 消息区域 */
@@ -214,6 +202,14 @@ body {
     margin-right: 12px;
 }
 
+/* 系统消息 */
+.system-message {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 12px;
+    padding: 8px;
+}
+
 /* 输入区域 */
 .input-area {
     padding: 16px 20px;
@@ -253,7 +249,29 @@ body {
     background: #5a67d8;
 }
 
-/* 弹窗模态框 */
+.input-area button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* 退出按钮 */
+.logout-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.logout-btn:hover {
+    background: #dc2626;
+}
+
+/* 弹窗 */
 .modal {
     position: fixed;
     z-index: 1000;
@@ -299,12 +317,12 @@ body {
     padding: 20px;
 }
 
-.modal-body input, .modal-body textarea, .modal-body select {
+.modal-body input {
     width: 100%;
-    padding: 8px 12px;
+    padding: 10px;
+    margin-bottom: 15px;
     border: 1px solid #ddd;
     border-radius: 6px;
-    margin-bottom: 12px;
 }
 
 .modal-body button {
@@ -322,31 +340,71 @@ body {
     color: #9ca3af;
     padding: 40px;
 }
-
-.loading {
-    text-align: center;
+.session-id {
+    font-size: 11px;
     color: #9ca3af;
-    padding: 20px;
+    margin-top: 4px;
+    padding: 2px 0;
+    word-break: break-all;
 }
 
-.list-item {
-    padding: 10px;
-    border-bottom: 1px solid #f0f0f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.session-id:hover {
+    color: #667eea;
+    text-decoration: underline;
 }
 
-.list-item:last-child {
-    border-bottom: none;
+.chat-id {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 4px;
+    word-break: break-all;
 }
 
-.list-item button {
-    padding: 4px 12px;
+.chat-id span {
+    text-decoration: underline;
+}
+
+.chat-id span:hover {
+    color: #667eea;
+}
+.session-extra {
+    font-size: 10px;
+    color: #c0c4cc;
+    margin-top: 2px;
+}
+.withdraw-btn {
+    margin-left: 12px;
+    font-size: 11px;
+    color: #9ca3af;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.withdraw-btn:hover {
+    color: #ef4444;
+}
+
+.chat-action-btn {
+    background: #eef2ff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 16px;
     font-size: 12px;
+    cursor: pointer;
+    color: #667eea;
+    transition: all 0.2s;
+}
+
+.chat-action-btn:hover {
     background: #667eea;
     color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+}
+
+.new-message-badge {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    margin-left: 8px;
 }

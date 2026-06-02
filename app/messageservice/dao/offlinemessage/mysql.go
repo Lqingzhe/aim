@@ -25,7 +25,7 @@ func deleteMysql(ctx context.Context, dbContext *model.DBContext, info *MessageI
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:DeleteMysql")
 	messageIDList := make([]int64, 0, len(info.Info))
-	result := dbContext.Mysql.Client.WithContext(ctx).Where("message_id IN ?", messageIDList).Delete(info.Info)
+	result := dbContext.Mysql.Client.WithContext(ctx).Where("message_id IN ?", messageIDList).Delete(&info.OfflineMessageInfo)
 	if err2 := newerror.IsMysqlError(result); err2 != nil {
 		return err2
 	}

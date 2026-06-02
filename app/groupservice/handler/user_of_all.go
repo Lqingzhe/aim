@@ -14,7 +14,7 @@ func (s *GroupServiceImpl) GetGroupAndSessionID(ctx context.Context, req *kitexg
 	}()
 	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewUserInfoOfGroup(s.DBContext)
-	groupIDList, sessionIDList, err := serviceStruct.GetGroupAndSessionID(ctx, req.UserId)
+	groupIDList, sessionIDList, userOfSessionIDList, err := serviceStruct.GetGroupAndSessionID(ctx, req.UserId)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
 		logger = newlog.AddError(logger, err, err2.StatusCode)
@@ -22,8 +22,9 @@ func (s *GroupServiceImpl) GetGroupAndSessionID(ctx context.Context, req *kitexg
 		return nil, err
 	}
 	resp = &kitexgroupservice.GetGroupAndSessionIDResp{
-		GroupIdList:   groupIDList,
-		SessionIdList: sessionIDList,
+		GroupIdList:         groupIDList,
+		SessionIdList:       sessionIDList,
+		UserOfSessionIdList: userOfSessionIDList,
 	}
 	newlog.Log(logger, newerror.LevelInfo, "GetGroupAndSessionID")
 	return resp, nil

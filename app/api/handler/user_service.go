@@ -392,7 +392,7 @@ func (h *HandlerConfig) GetOtherUserInfo(c *gin.Context) {
 			break
 		}
 	}
-	h.hub.Mu.Unlock()
+	h.hub.Mu.RUnlock()
 	c.JSON(http.StatusOK, gin.H{
 		"code":    newerror.CodeSuccess,
 		"message": "success",
@@ -568,15 +568,26 @@ func (h *HandlerConfig) GetGroupAndSessionID(c *gin.Context) {
 		newlog.SetGinLog(c, logger, "GetGroupAndSessionID", err2.LogLevel)
 		return
 	}
+	sessionIDList := make([]string, 0, len(kitexResp.SessionIdList))
+	userOfSessionIDList := make([]string, 0, len(kitexResp.SessionIdList))
+	for i := range kitexResp.SessionIdList {
+		sessionIDList = append(sessionIDList, strconv.FormatInt(kitexResp.SessionIdList[i], 10))
+		userOfSessionIDList = append(userOfSessionIDList, strconv.FormatInt(kitexResp.UserOfSessionIdList[i], 10))
+	}
+	groupIDList := make([]string, 0, len(kitexResp.GroupIdList))
+	for i := range kitexResp.GroupIdList {
+		groupIDList = append(groupIDList, strconv.FormatInt(kitexResp.GroupIdList[i], 10))
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"code":    newerror.CodeSuccess,
 		"message": "success",
 		"data": gin.H{
 			"session_info": gin.H{
-				"session_id_list": kitexResp.SessionIdList,
+				"session_id_list":         sessionIDList,
+				"user_of_session_id_list": userOfSessionIDList,
 			},
 			"group_info": gin.H{
-				"group_id_list": kitexResp.GroupIdList,
+				"group_id_list": groupIDList,
 			},
 		},
 	})

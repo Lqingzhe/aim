@@ -2037,8 +2037,9 @@ var fieldIDToName_GetGroupAndSessionIDReq = map[int16]string{
 }
 
 type GetGroupAndSessionIDResp struct {
-	GroupIdList   []int64 `thrift:"group_id_list,1" frugal:"1,default,list<i64>" json:"group_id_list"`
-	SessionIdList []int64 `thrift:"session_id_list,2" frugal:"2,default,list<i64>" json:"session_id_list"`
+	GroupIdList         []int64 `thrift:"group_id_list,1" frugal:"1,default,list<i64>" json:"group_id_list"`
+	SessionIdList       []int64 `thrift:"session_id_list,2" frugal:"2,default,list<i64>" json:"session_id_list"`
+	UserOfSessionIdList []int64 `thrift:"user_of_session_id_list,3" frugal:"3,default,list<i64>" json:"user_of_session_id_list"`
 }
 
 func NewGetGroupAndSessionIDResp() *GetGroupAndSessionIDResp {
@@ -2055,11 +2056,18 @@ func (p *GetGroupAndSessionIDResp) GetGroupIdList() (v []int64) {
 func (p *GetGroupAndSessionIDResp) GetSessionIdList() (v []int64) {
 	return p.SessionIdList
 }
+
+func (p *GetGroupAndSessionIDResp) GetUserOfSessionIdList() (v []int64) {
+	return p.UserOfSessionIdList
+}
 func (p *GetGroupAndSessionIDResp) SetGroupIdList(val []int64) {
 	p.GroupIdList = val
 }
 func (p *GetGroupAndSessionIDResp) SetSessionIdList(val []int64) {
 	p.SessionIdList = val
+}
+func (p *GetGroupAndSessionIDResp) SetUserOfSessionIdList(val []int64) {
+	p.UserOfSessionIdList = val
 }
 
 func (p *GetGroupAndSessionIDResp) String() string {
@@ -2072,6 +2080,7 @@ func (p *GetGroupAndSessionIDResp) String() string {
 var fieldIDToName_GetGroupAndSessionIDResp = map[int16]string{
 	1: "group_id_list",
 	2: "session_id_list",
+	3: "user_of_session_id_list",
 }
 
 type GetGroupOrSessionRoleAndExistReq struct {

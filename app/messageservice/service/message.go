@@ -343,17 +343,39 @@ func (m *MessageService) GetMessageList(ctx context.Context, groupID int64, user
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("message:GetMessageList")
+	if endTimeSecond < startTimeSecond || endTimeSecond < 0 || startTimeSecond < 0 {
+		return nil, newerror.MakeError(http.StatusBadRequest, newerror.CodeParamValueInvalid, "The Time Formate Is Error", fmt.Errorf("User Send Error Formate Time, startTime:%d ,endTime:%d", startTimeSecond, endTimeSecond), newerror.LevelInfo)
+	}
 	var finalErr error
-	if endTimeSecond > startTimeSecond || endTimeSecond < 0 || startTimeSecond < 0 {
-		return nil, newerror.MakeError(http.StatusBadRequest, newerror.CodeParamValueInvalid, "The Time Formate Is Error", fmt.Errorf("User Send Error Formate Time"), newerror.LevelInfo)
+	GetGroupOrSessionRoleAndExistReq := kitexgroupservice.GetGroupOrSessionRoleAndExistReq{
+		CommonInfo: &kitexcommonmodel.CommonInfo{
+			Trace: m.traceID,
+		},
+		GroupId: groupID,
+		UserId:  userID,
 	}
-	if err = judgeExistInGroupAndMute(ctx, m, groupID, userID); newerror.WhetherInterrupt(err, &finalErr) {
-		return nil, err
+	GetGroupOrSessionRoleAndExistResp, err := m.serviceClient.GroupService.GetGroupOrSessionRoleAndExist(ctx, &GetGroupOrSessionRoleAndExistReq)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return nil, finalErr
 	}
-	messageStruct := message.NewStruct(groupID, 0, userID, time.Time{}, message.GetWithGroupID, message.GetWithUserID, message.GetWithStartAndEndTime(time.Unix(startTimeSecond, 0), time.Unix(endTimeSecond, 0)))
+	if !GetGroupOrSessionRoleAndExistResp.Exist {
+		return nil, newerror.MakeError(http.StatusNotFound, newerror.CodeResourceNotFound, "The Group Is Not Exist", fmt.Errorf("Try To Send Message To Unjoin Group"), newerror.LevelInfo)
+	}
+	startTime := time.Unix(startTimeSecond, 0)
+	endTime := time.Unix(endTimeSecond, 0)
+	messageStruct := message.NewStruct(groupID, 0, 0, time.Time{}, message.GetWithGroupID, message.GetWithStartAndEndTime(&startTime, &endTime))
 	exist, err := dao.Get(ctx, messageStruct, m.dbContext)
 	if newerror.WhetherInterrupt(err, &finalErr) {
 		return nil, err
+	}
+	setLastVisitTimeReq := kitexgroupservice.SetLastVisitTimeReq{
+		CommonInfo: &kitexcommonmodel.CommonInfo{Trace: m.traceID},
+		UserId:     userID,
+		GroupId:    groupID,
+	}
+	_, err = m.serviceClient.GroupService.SetLastVisitTime(ctx, &setLastVisitTimeReq)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return nil, finalErr
 	}
 	if !exist {
 		return nil, newerror.MakeError(http.StatusOK, newerror.CodeSuccess, "Do Not Have Message", fmt.Errorf("Do Not Find Message"), newerror.LevelInfo)
@@ -388,14 +410,15 @@ func (m *MessageService) GetNewMessage(ctx context.Context, groupID int64, userI
 	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
 		return nil, nil, nil, nil, finalErr
 	}
-	var LastVisitTime int64
+	var LastVisitTimeSecond int64
 	for i := range getLastVisitTimeResp.UserIdList {
 		if getLastVisitTimeResp.UserIdList[i] == userID {
-			LastVisitTime = getLastVisitTimeResp.UserIdList[i]
+			LastVisitTimeSecond = getLastVisitTimeResp.LastVisitTimeList[i]
 			break
 		}
 	}
-	messageStruct := message.NewStruct(groupID, 0, 0, time.Time{}, message.GetWithStartAndEndTime(time.Unix(LastVisitTime, 0), time.Time{}), message.GetWithGroupID)
+	LastVisitTime := time.Unix(LastVisitTimeSecond, 0)
+	messageStruct := message.NewStruct(groupID, 0, 0, time.Time{}, message.GetWithStartAndEndTime(&LastVisitTime, nil), message.GetWithGroupID)
 	exist, err := dao.Get(ctx, messageStruct, m.dbContext)
 	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
 		return nil, nil, nil, nil, finalErr

@@ -16,8 +16,8 @@ type Message struct {
 	whereWithUserID      bool
 	whereWithMessageID   bool
 	whereWithMessageTime bool
-	findStartTimeSecond  time.Time
-	findEndTimeSecond    time.Time
+	findStartTimeSecond  *time.Time
+	findEndTimeSecond    *time.Time
 	Info                 []*model.MessageInfo
 }
 type operate func(*Message)
@@ -76,7 +76,7 @@ func GetWithGroupID(info *Message) {
 func GetWithUserID(info *Message) {
 	info.whereWithUserID = true
 }
-func GetWithStartAndEndTime(startTime time.Time, endTime time.Time) operate {
+func GetWithStartAndEndTime(startTime *time.Time, endTime *time.Time) operate {
 	return func(info *Message) {
 		info.findStartTimeSecond = startTime
 		info.findEndTimeSecond = endTime

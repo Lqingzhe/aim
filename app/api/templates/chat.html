@@ -6,14 +6,18 @@
     <title>IM 聊天系统</title>
     <link rel="stylesheet" href="/static/css/chat.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <audio id="notification-sound" src="/static/notification.mp3" preload="auto">
+    </audio>
 </head>
 <body>
 <div class="app">
-    <!-- 左侧边栏 -->
+    <!-- 侧边栏 -->
     <div class="sidebar">
         <div class="user-info">
-            <div class="user-name" id="user-name">加载中...</div>
+            <div class="user-name" id="user-name">加载中...<span class="status"></span></div>
             <div class="user-id" id="user-id"></div>
+            <button id="btn-user-info" class="logout-btn" style="background:#667eea; margin-top:10px;">📝 个人信息</button>
+            <button id="btn-logout" class="logout-btn">🚪 退出登录</button>
         </div>
 
         <div class="action-buttons">
@@ -22,7 +26,6 @@
             <button class="action-btn" id="btn-join-group">🚪 加入群聊</button>
             <button class="action-btn" id="btn-friend-apply-list">📋 好友申请</button>
             <button class="action-btn" id="btn-refresh">🔄 刷新</button>
-            <button class="action-btn danger" id="btn-logout">🚪 退出</button>
         </div>
 
         <div class="session-list" id="session-list">
@@ -30,13 +33,19 @@
         </div>
     </div>
 
-    <!-- 右侧聊天区 -->
+    <!-- 聊天区域 -->
     <div class="chat-area">
         <div class="chat-header">
-            <div class="chat-title" id="chat-title">请选择一个会话</div>
+            <div>
+                <div class="chat-title" id="chat-title">请选择一个会话</div>
+                <div class="chat-id" id="chat-id"></div>
+            </div>
+            <div>
+                <button id="btn-withdraw-latest" class="chat-action-btn" title="撤回最新消息">↩️ 撤回最新</button>
+            </div>
         </div>
         <div class="messages-container" id="messages-container">
-            <div class="empty-tip">选择一个会话开始聊天</div>
+            <div class="system-message">选择一个会话开始聊天</div>
         </div>
         <div class="input-area">
             <textarea id="message-input" rows="1" placeholder="输入消息..."></textarea>
@@ -45,7 +54,7 @@
     </div>
 </div>
 
-<!-- 弹窗模态框 -->
+<!-- 弹窗 -->
 <div id="modal" class="modal" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
@@ -56,6 +65,17 @@
     </div>
 </div>
 
+<!-- ============================================ -->
+<!-- JS 文件按顺序引入 -->
+<!-- ============================================ -->
+<script src="/static/js/config.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/websocket.js"></script>
+<script src="/static/js/session.js"></script>
+<script src="/static/js/message.js"></script>
+<script src="/static/js/ui.js"></script>
+<script src="/static/js/modals.js"></script>
 <script src="/static/js/chat.js"></script>
 </body>
 </html>

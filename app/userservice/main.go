@@ -12,6 +12,7 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
 )
 
@@ -41,22 +42,16 @@ func main() {
 			logger,
 			Config.UserConfig,
 		),
-		//server.WithServerBasicInfo(
-		//	&rpcinfo.EndpointBasicInfo{
-		//		ServiceName: "user_service",
-		//	},
-		//),
-
-		//server.WithListener(listener),
-		//server.WithServiceAddr(&net.TCPAddr{
-		//	IP:   net.ParseIP(Config.ServiceConfig.Host),
-		//	Port: int(Config.ServiceConfig.Port),
-		//}),
+		server.WithServerBasicInfo(
+			&rpcinfo.EndpointBasicInfo{
+				ServiceName: "user_service",
+			},
+		),
 		server.WithServiceAddr(addr),
-		//commonconfig.RegisterService(
-		//	Config.NacosConfig,
-		//	logger,
-		//),
+		commonconfig.RegisterService(
+			Config.NacosConfig,
+			logger,
+		),
 	)
 	err = svr.Run()
 	if err != nil {

@@ -15,6 +15,7 @@ import (
 	"strconv"
 
 	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
 )
 
@@ -71,20 +72,16 @@ func main() {
 			groupNoticeTopic,
 			systemTopic,
 		),
+		server.WithServerBasicInfo(
+			&rpcinfo.EndpointBasicInfo{
+				ServiceName: "message_service",
+			},
+		),
 		server.WithServiceAddr(addr),
-		//server.WithServerBasicInfo(
-		//	&rpcinfo.EndpointBasicInfo{
-		//		ServiceName: "user_service",
-		//	},
-		//),
-		//server.WithServiceAddr(&net.TCPAddr{
-		//	IP:   net.ParseIP(Config.ServiceConfig.Host),
-		//	Port: int(Config.ServiceConfig.Port),
-		//}),
-		//commonconfig.RegisterService(
-		//	Config.NacosConfig,
-		//	logger,
-		//),
+		commonconfig.RegisterService(
+			Config.NacosConfig,
+			logger,
+		),
 	)
 	err = svr.Run()
 	if err != nil {

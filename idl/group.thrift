@@ -246,6 +246,7 @@ struct GetGroupAndSessionIDReq{
 struct GetGroupAndSessionIDResp{
     1:list<i64> group_id_list
     2:list<i64> session_id_list
+    3:list<i64> user_of_session_id_list
 }
 
 struct GetGroupOrSessionRoleAndExistReq{

@@ -837,7 +837,7 @@ func (s *ServiceGroup) GetGroupUserID(ctx context.Context, groupID int64, userID
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("group:GetGroupUserID")
-	groupMemberStruct := groupmember.NewStruct(groupID, []int64{userID}, nil, groupmember.WithWhereMemberID)
+	groupMemberStruct := groupmember.NewStruct(groupID, nil, nil)
 	exist, err := dao.Get(ctx, groupMemberStruct, s.dbContext)
 	if err != nil {
 		return nil, err

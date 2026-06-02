@@ -27,7 +27,7 @@ func AddLatencyAndTime(zapConfig *zap.Logger, beginTime time.Time) *zap.Logger {
 func AddTraceID(zapConfig *zap.Logger, traceID string) *zap.Logger {
 	return zapConfig.With(zap.String("trace_id", traceID))
 } //在每个handler开头调用
-func AddError(zapConfig *zap.Logger, err error, statueCode newerror.ErrorStatue) *zap.Logger {
+func AddError[t int | newerror.ErrorStatue](zapConfig *zap.Logger, err error, statueCode t) *zap.Logger {
 	return zapConfig.With(zap.Int("status_code", int(statueCode)), zap.Error(err))
 } //用来在发生错误时添加错误，在AddInfo前调用
 func AddGateWayInfo(zapConfig *zap.Logger, httpStatue int, userID int64, ip string, operation string) *zap.Logger {
@@ -37,7 +37,8 @@ func AddServiceInfo(zapConfig *zap.Logger, errorCode newerror.ErrorStatue) *zap.
 	return zapConfig.With(zap.Int("error_code", int(errorCode)))
 } //用于在Service的handler最后调用
 
-func Log(logger *zap.Logger, logState zapcore.Level, message string) {
+func Log[t int8 | zapcore.Level](logger *zap.Logger, rawLogState t, message string) {
+	logState := zapcore.Level(rawLogState)
 	switch logState {
 	case zapcore.DebugLevel:
 		logger.Debug(message)

@@ -48,14 +48,10 @@ func main() {
 			},
 		),
 		server.WithServiceAddr(addr),
-		//server.WithServiceAddr(&net.TCPAddr{
-		//	IP:   net.ParseIP(Config.ServiceConfig.Host),
-		//	Port: int(Config.ServiceConfig.Port),
-		//}),
-		//commonconfig.RegisterService(
-		//	Config.NacosConfig,
-		//	logger,
-		//),
+		commonconfig.RegisterService(
+			Config.NacosConfig,
+			logger,
+		),
 	)
 	err = svr.Run()
 	if err != nil {

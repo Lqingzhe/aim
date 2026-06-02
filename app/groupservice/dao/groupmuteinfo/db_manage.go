@@ -71,9 +71,11 @@ func (m *MuteInfo) GetInfo(ctx context.Context, dbContext any) (exist bool, err 
 				return false, err
 			}
 			newStruct := &MuteInfo{
-				GroupMuteInfo: *m.Info[0],
-				Info:          []*model.GroupMuteInfo{},
-			} //存在则Info【0】有值，不存在则默认为空值
+				Info: []*model.GroupMuteInfo{},
+			}
+			if exist {
+				newStruct.GroupMuteInfo = *m.Info[0]
+			}
 			newStruct.GroupMuteInfo.UserID = m.UserID
 			newStruct.GroupMuteInfo.GroupID = m.GroupID
 			err = setRedis(ctx, DB, newStruct)

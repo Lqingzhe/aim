@@ -23,7 +23,7 @@ func NewUserInfoOfGroup(dbContext *model.DBContext) *UserOfAll {
 		dbContext: dbContext,
 	}
 }
-func (u *UserOfAll) GetGroupAndSessionID(ctx context.Context, userID int64) (groupID []int64, sessionID []int64, err error) {
+func (u *UserOfAll) GetGroupAndSessionID(ctx context.Context, userID int64) (groupID []int64, sessionID []int64, userOfSessionID []int64, err error) {
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("user_of_all:GetGroupAndSessionInfo")
@@ -31,7 +31,7 @@ func (u *UserOfAll) GetGroupAndSessionID(ctx context.Context, userID int64) (gro
 	sessionStruct := sessioninfo.NewStruct(0, userID, 0, sessioninfo.WithUserID)
 	exist, err := dao.Get(ctx, groupStruct, u.dbContext)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	if !exist {
 		groupID = nil
@@ -43,17 +43,19 @@ func (u *UserOfAll) GetGroupAndSessionID(ctx context.Context, userID int64) (gro
 	}
 	exist, err = dao.Get(ctx, sessionStruct, u.dbContext)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	if !exist {
 		sessionID = nil
 	} else {
 		sessionID = make([]int64, len(sessionStruct.Info))
+		userOfSessionID = make([]int64, len(sessionStruct.Info))
 		for i, v := range sessionStruct.Info {
 			sessionID[i] = v.SessionID
+			userOfSessionID[i] = v.GoalUserID
 		}
 	}
-	return groupID, sessionID, nil
+	return groupID, sessionID, userOfSessionID, nil
 } //未获取到的Info空值为nil
 func (u *UserOfAll) GetGroupOrSessionExistAndRole(ctx context.Context, groupID int64, userID int64) (role commonmodel.GroupRole, exist bool, err error) {
 	defer func(trace string) {

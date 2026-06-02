@@ -46,20 +46,22 @@ func (c *Consumer) Consumer(msg *sarama.ConsumerMessage) (err *newerror.Error) {
 			}
 		}
 	}
-	setOfflineMessageReq := kitexmessageservice2.SetOfflineMessageReq{
-		CommonInfo:          &kitexcommonmodel.CommonInfo{Trace: base.TraceID},
-		GoalUserAndDeviceId: goalUserAndDeviceIDList,
-		JsonData:            base.Data,
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-	_, err2 := c.MessageClient.SetOfflineMessage(ctx, &setOfflineMessageReq)
-	if err2 != nil {
-		if a, err := newerror.IsContextError(err2); a {
+	if len(goalUserAndDeviceIDList) > 0 {
+		setOfflineMessageReq := kitexmessageservice2.SetOfflineMessageReq{
+			CommonInfo:          &kitexcommonmodel.CommonInfo{Trace: base.TraceID},
+			GoalUserAndDeviceId: goalUserAndDeviceIDList,
+			JsonData:            base.Data,
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+		_, err2 := c.MessageClient.SetOfflineMessage(ctx, &setOfflineMessageReq)
+		if err2 != nil {
+			if a, err := newerror.IsContextError(err2); a {
+				return err
+			}
+			err = newerror.TranslateError(err2)
 			return err
 		}
-		err = newerror.TranslateError(err2)
-		return err
 	}
 	return nil
 }

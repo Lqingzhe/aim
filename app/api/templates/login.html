@@ -150,6 +150,7 @@
         <button class="tab" data-tab="register">注册</button>
     </div>
 
+    <!-- 登录表单 -->
     <div id="login-panel" class="form-panel">
         <div class="form-group">
             <label>用户ID</label>
@@ -167,6 +168,7 @@
         <div id="login-message" class="message"></div>
     </div>
 
+    <!-- 注册表单 -->
     <div id="register-panel" class="form-panel hidden">
         <div class="form-group">
             <label>密码</label>
@@ -189,7 +191,7 @@
     </div>
 
     <div class="device-info">
-        💡 提示：用户ID会自动保存为字符串，请完整复制
+        💡 提示：用户ID会自动保存，请完整复制
     </div>
 </div>
 
@@ -204,6 +206,7 @@
         }, 3000);
     }
 
+    // 注册
     document.getElementById('btn-register').addEventListener('click', async () => {
         const password = document.getElementById('reg-password').value;
         const confirm = document.getElementById('reg-confirm').value;
@@ -244,6 +247,7 @@
         }
     });
 
+    // 登录
     document.getElementById('btn-login').addEventListener('click', async () => {
         const userId = String(document.getElementById('login-user-id').value).trim();
         const password = document.getElementById('login-password').value;
@@ -270,11 +274,14 @@
             const data = await response.json();
 
             if (data.code === 0 && data.data?.token_info) {
-                localStorage.setItem('access_token', data.data.token_info.access_token);
-                localStorage.setItem('refresh_token', data.data.token_info.refresh_token);
-                localStorage.setItem('user_id', userId);
-                localStorage.setItem('device_id', deviceID);
+                // ✅ 使用 sessionStorage 存储
+                sessionStorage.setItem('access_token', data.data.token_info.access_token);
+                sessionStorage.setItem('refresh_token', data.data.token_info.refresh_token);
+                sessionStorage.setItem('user_id', userId);
+                sessionStorage.setItem('device_id', deviceID);
+
                 showMessage(messageEl, '登录成功，正在跳转...', false);
+
                 setTimeout(() => {
                     window.location.href = '/chat';
                 }, 500);
@@ -286,6 +293,7 @@
         }
     });
 
+    // Tab 切换
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             const target = tab.dataset.tab;

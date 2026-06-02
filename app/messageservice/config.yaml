@@ -41,7 +41,7 @@ mysql_config:
   write_timeout: 30s
 
 mongo_db_config:
-  url: "mongodb://localhost:27017"
+  url: "mongodb://root:123456@localhost:27017/?authSource=admin"
 
 redis_config:
   addr: "localhost:6379"

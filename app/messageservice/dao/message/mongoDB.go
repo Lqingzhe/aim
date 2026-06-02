@@ -23,14 +23,15 @@ func addWhereInfo(info *Message) bson.M {
 	}
 	if info.whereWithMessageTime {
 		timeM := bson.M{}
-		if info.findStartTimeSecond.Unix() != 0 {
+		if info.findStartTimeSecond != nil {
 			timeM["$gte"] = info.findStartTimeSecond.Unix()
 		}
-		if info.findEndTimeSecond.Unix() != 0 {
+		if info.findEndTimeSecond != nil {
 			timeM["$lte"] = info.findEndTimeSecond.Unix()
 		}
-
-		newM["send_time_second"] = timeM
+		if len(timeM) > 0 {
+			newM["send_time_second"] = timeM
+		}
 	}
 	return newM
 }

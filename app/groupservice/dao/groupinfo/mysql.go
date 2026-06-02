@@ -56,7 +56,7 @@ func deleteMysql(ctx context.Context, dbContext *model.DBContext, info *GroupInf
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:DeleteMysql")
-	result := dbContext.Mysql.Client.WithContext(ctx).Where("group_id = ?", info.GroupInfo.GroupID).Delete(info.GroupInfo)
+	result := dbContext.Mysql.Client.WithContext(ctx).Where("group_id = ?", info.GroupInfo.GroupID).Delete(&info.GroupInfo)
 	if err2 := newerror.IsMysqlError(result); err2 != nil {
 		return err2
 	}
