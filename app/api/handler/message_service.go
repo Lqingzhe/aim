@@ -591,6 +591,7 @@ func (h *HandlerConfig) GetMessageList(c *gin.Context) {
 	}
 	kitexReq := &kitexmessageservice.GetMessageListReq{
 		CommonInfo:      &kitexcommonmodel.CommonInfo{Trace: c.GetString("trace")},
+		UserId:          userID,
 		GroupId:         req.GroupID,
 		StartTimeSecond: req.StartTimeSecond,
 		EndTimeSecond:   req.EndTimeSecond,

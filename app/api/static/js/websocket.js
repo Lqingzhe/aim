@@ -2,10 +2,6 @@
 // WebSocket 连接和消息处理
 // ============================================
 
-// 使用不同的变量名避免冲突
-let webSocket = null;
-let heartbeatTimer = null;
-
 function connectWebSocket() {
     const token = sessionStorage.getItem('access_token');
     if (!token) {
@@ -16,9 +12,9 @@ function connectWebSocket() {
     const wsUrl = `${WS_URL}?token=${encodeURIComponent(token)}`;
     console.log('WebSocket 连接 URL:', wsUrl);
 
-    webSocket = new WebSocket(wsUrl);
+    window.webSocket = new WebSocket(wsUrl);
 
-    webSocket.onopen = () => {
+    window.webSocket.onopen = () => {
         console.log('WebSocket 已连接');
         if (typeof addSystemMessage === 'function') {
             addSystemMessage('✅ WebSocket 连接成功');
@@ -26,7 +22,7 @@ function connectWebSocket() {
         startHeartbeatTimer();
     };
 
-    webSocket.onmessage = (event) => {
+    window.webSocket.onmessage = (event) => {
         console.log('WebSocket 收到消息:', event.data);
 
         if (!event.data || event.data.trim() === '') {
@@ -54,13 +50,47 @@ function connectWebSocket() {
                 return;
             }
 
+            // 处理新消息通知
+            if (data.message_code === 'group_message' || data.type === 'new_message') {
+                console.log('收到新消息通知，调用 handleNewMessage');
+                if (typeof handleNewMessage === 'function') {
+                    handleNewMessage(data);
+                }
+
+                // 收到新消息后，延迟更新最后访问时间（表示用户已读）
+                if (currentSession && String(data.session_id || data.group_id) === String(currentSession.id)) {
+                    setTimeout(() => {
+                        if (typeof updateLastVisitTime === 'function') {
+                            console.log('收到新消息，更新最后访问时间');
+                            updateLastVisitTime(currentSession.id, currentSession.type);
+                        }
+                    }, 1000);
+                }
+            }
+
+            // 处理系统消息通知
+            if (data.message_code === 'friend_request' || data.message_code === 'group_apply' ||
+                data.message_code === 'group_join' || data.message_code === 'group_leave' ||
+                data.message_code === 'group_kick' || data.message_code === 'group_disband') {
+                console.log('收到系统通知:', data.message_code);
+                if (typeof addSystemMessage === 'function') {
+                    addSystemMessage(`📢 [系统通知] ${JSON.stringify(data)}`);
+                }
+                if (typeof loadSessions === 'function') {
+                    loadSessions();
+                }
+            }
+
             // 其他所有消息，原样输出到聊天框
             if (typeof addSystemMessage === 'function') {
-                addSystemMessage(`📨 ${event.data}`);
+                let displayText = event.data;
+                if (typeof data === 'object' && data.message_code !== 'group_message') {
+                    displayText = JSON.stringify(data, null, 2);
+                }
+                addSystemMessage(`📨 ${displayText}`);
             }
 
         } catch (e) {
-            // 不是 JSON 格式，直接输出
             console.log('消息不是 JSON 格式，直接输出');
             if (typeof addSystemMessage === 'function') {
                 addSystemMessage(`📨 ${event.data}`);
@@ -68,7 +98,7 @@ function connectWebSocket() {
         }
     };
 
-    webSocket.onclose = (event) => {
+    window.webSocket.onclose = (event) => {
         console.log('WebSocket 已断开, code:', event.code, 'reason:', event.reason);
         if (typeof addSystemMessage === 'function') {
             addSystemMessage('⚠️ WebSocket 连接已断开，3秒后重连...');
@@ -83,7 +113,7 @@ function connectWebSocket() {
         }, 3000);
     };
 
-    webSocket.onerror = (error) => {
+    window.webSocket.onerror = (error) => {
         console.error('WebSocket 错误:', error);
         if (typeof addSystemMessage === 'function') {
             addSystemMessage('❌ WebSocket 连接错误');
@@ -92,29 +122,29 @@ function connectWebSocket() {
 }
 
 function startHeartbeatTimer() {
-    if (heartbeatTimer) {
-        clearInterval(heartbeatTimer);
+    if (window.heartbeatTimer) {
+        clearInterval(window.heartbeatTimer);
     }
 
-    heartbeatTimer = setInterval(() => {
-        if (webSocket && webSocket.readyState === WebSocket.OPEN) {
-            webSocket.send(JSON.stringify({ type: 'ping' }));
+    window.heartbeatTimer = setInterval(() => {
+        if (window.webSocket && window.webSocket.readyState === WebSocket.OPEN) {
+            window.webSocket.send(JSON.stringify({ type: 'ping' }));
             console.log('发送心跳 ping');
         }
     }, 30000);
 }
 
 function stopHeartbeatTimer() {
-    if (heartbeatTimer) {
-        clearInterval(heartbeatTimer);
-        heartbeatTimer = null;
+    if (window.heartbeatTimer) {
+        clearInterval(window.heartbeatTimer);
+        window.heartbeatTimer = null;
     }
 }
 
 // 页面关闭前清理
 window.addEventListener('beforeunload', () => {
-    if (webSocket && webSocket.readyState === WebSocket.OPEN) {
-        webSocket.close();
+    if (window.webSocket && window.webSocket.readyState === WebSocket.OPEN) {
+        window.webSocket.close();
     }
     stopHeartbeatTimer();
 });

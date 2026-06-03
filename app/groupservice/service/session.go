@@ -161,19 +161,19 @@ func (s *ServiceSession) DeleteSession(ctx context.Context, sessionID int64, use
 	return nil
 }
 
-func (s *ServiceSession) GetFriendLastVisitTime(ctx context.Context, sessionID int64, goalUserID int64) (lastVisitTime string, err error) {
+func (s *ServiceSession) GetFriendLastVisitTime(ctx context.Context, sessionID int64, goalUserID int64) (lastVisitTimeSecond int64, err error) {
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("session:GetFriendLastVisitTime")
 	groupMemberStruct := groupmember.NewStruct(sessionID, []int64{goalUserID}, nil, groupmember.WithWhereMemberID)
 	exist, err := dao.Get(ctx, groupMemberStruct, s.dbContext)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 	if !exist {
-		return "", newerror.MakeError(http.StatusBadRequest, newerror.CodeResourceNotFound, "He Is Not Your Friend", fmt.Errorf("Do Not Get The Info Whith SessionID and UserID"), newerror.LevelInfo)
+		return 0, newerror.MakeError(http.StatusBadRequest, newerror.CodeResourceNotFound, "He Is Not Your Friend", fmt.Errorf("Do Not Get The Info Whith SessionID and UserID"), newerror.LevelInfo)
 	}
-	return groupMemberStruct.Info[0].LastReadTime.String(), nil
+	return groupMemberStruct.Info[0].LastReadTime.Unix(), nil
 }
 func (s *ServiceSession) ApplyForFriend(ctx context.Context, userID int64, goalUserID int64) (err error) {
 	defer func(trace string) {

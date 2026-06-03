@@ -48,6 +48,7 @@ gateway_config:
     /group/set-manager: 10s
     /group/revoke-manager: 10s
     /group/get-last-visit-time: 5s
+    /group/set-last-visit-time: 5s
     /group/kick-out-group: 10s
     /group/apply-for-friend: 10s
     /group/get-friend-apply-list: 5s
@@ -76,7 +77,7 @@ token_config:
   token_password: "your-jwt-secret-key-change-in-production"
   salt_byte_len: 16
   refresh_token_expire_time: 720h
-  access_token_expire_time: 1h
+  access_token_expire_time: 10m
 
 kafka_config:
   broker:

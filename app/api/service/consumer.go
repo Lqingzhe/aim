@@ -7,6 +7,7 @@ import (
 	newerror "aim/pkg/error"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -28,6 +29,10 @@ func (c *Consumer) Consumer(msg *sarama.ConsumerMessage) (err *newerror.Error) {
 	defer func(trace string) {
 		if err != nil {
 			err = err.AddErrorTrace(trace).(*newerror.Error)
+		}
+		err2 := recover()
+		if err2 != nil {
+			err = newerror.TranslateError(newerror.MakeKafkaError(newerror.CodeInternalError, fmt.Errorf("%v", err2), newerror.LevelError)).AddErrorTrace(trace).(*newerror.Error)
 		}
 	}("consumer:Consumer")
 	var base struct {

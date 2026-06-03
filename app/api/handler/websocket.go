@@ -33,6 +33,7 @@ func (h *HandlerConfig) ConnectWebsocket(c *gin.Context) {
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, ip, fullPath)
 		logger = newlog.AddLatencyAndTime(logger, beginTime)
 		newlog.Log(logger, newerror.LevelInfo, "ConnectWebsocket")
+		return
 	}
 	webStruct := service.NewWebSocket(h.hub)
 	conn, err := h.websocketUpgrader.Upgrade(c.Writer, c.Request, nil)
@@ -46,6 +47,8 @@ func (h *HandlerConfig) ConnectWebsocket(c *gin.Context) {
 
 	webStruct.ConnectWebsocket(conn, userID, deviceID)
 	logger, message, logLevel := h.GetOfflineMessages(ctx, logger, userID, deviceID, traceID, ip, fullPath)
+	logger = newlog.AddGateWayInfo(logger, -1, userID, ip, fullPath)
+	logger = newlog.AddLatencyAndTime(logger, beginTime)
 	newlog.Log(logger, logLevel, message)
 }
 

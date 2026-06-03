@@ -110,6 +110,7 @@ func (A *ApiConfig) Begin(port string) {
 				group.POST("/set-manager", middleware.SetTimeOut(A.RoutTimeOut["/group/set-manager"]), handlerConfig.SetManager)
 				group.POST("/revoke-manager", middleware.SetTimeOut(A.RoutTimeOut["/group/revoke-manager"]), handlerConfig.RevokeManager)
 				group.POST("/get-last-visit-time", middleware.SetTimeOut(A.RoutTimeOut["/group/get-last-visit-time"]), handlerConfig.GetLastVisitTime)
+				group.POST("/set-last-visit-time", middleware.SetTimeOut(A.RoutTimeOut["/group/set-last-visit-time"]), handlerConfig.SetLastVisitTime)
 				group.POST("/kick-out-group", middleware.SetTimeOut(A.RoutTimeOut["/group/kick-out-group"]), handlerConfig.KickOutGroup)
 			}
 			{

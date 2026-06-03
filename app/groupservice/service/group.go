@@ -370,8 +370,8 @@ func (s *ServiceGroup) GetLastVisitTime(ctx context.Context, groupID int64, user
 		return nil, nil, newerror.MakeError(http.StatusNotFound, newerror.CodeResourceNotFound, "The Group Is Not Exist", fmt.Errorf("Get Last Visit Time From Unexist Group"), newerror.LevelInfo)
 	}
 	whetherUserInGroup := false
-	LastVisitTimeList := make([]int64, 0, len(groupMemberStruct.Info)-1)
-	memberIDList := make([]int64, 0, len(groupMemberStruct.Info)-1)
+	LastVisitTimeList := make([]int64, 0, len(groupMemberStruct.Info))
+	memberIDList := make([]int64, 0, len(groupMemberStruct.Info))
 	for _, info := range groupMemberStruct.Info {
 		if info.UserID == userID {
 			whetherUserInGroup = true

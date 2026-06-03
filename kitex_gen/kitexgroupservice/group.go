@@ -1735,7 +1735,7 @@ var fieldIDToName_GetFriendLastVisitTimeReq = map[int16]string{
 }
 
 type GetFriendLastVisitTimeResp struct {
-	LastVisitTime string `thrift:"last_visit_time,1" frugal:"1,default,string" json:"last_visit_time"`
+	LastVisitTime int64 `thrift:"last_visit_time,1" frugal:"1,default,i64" json:"last_visit_time"`
 }
 
 func NewGetFriendLastVisitTimeResp() *GetFriendLastVisitTimeResp {
@@ -1745,10 +1745,10 @@ func NewGetFriendLastVisitTimeResp() *GetFriendLastVisitTimeResp {
 func (p *GetFriendLastVisitTimeResp) InitDefault() {
 }
 
-func (p *GetFriendLastVisitTimeResp) GetLastVisitTime() (v string) {
+func (p *GetFriendLastVisitTimeResp) GetLastVisitTime() (v int64) {
 	return p.LastVisitTime
 }
-func (p *GetFriendLastVisitTimeResp) SetLastVisitTime(val string) {
+func (p *GetFriendLastVisitTimeResp) SetLastVisitTime(val int64) {
 	p.LastVisitTime = val
 }
 

@@ -66,6 +66,7 @@ repeat
 until cursor=="0"
 if #allKey>0 then
 	local result=redis.call("DEL",unpack(allKey))
+	return result
 end
-return result`
+return 0`
 )

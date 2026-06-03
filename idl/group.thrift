@@ -213,7 +213,7 @@ struct GetFriendLastVisitTimeReq{
     3:i64 goal_user_id
 }
 struct GetFriendLastVisitTimeResp{
-    1:string last_visit_time
+    1:i64 last_visit_time
 }
 
 struct ApplyForFriendReq{

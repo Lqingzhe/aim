@@ -368,15 +368,6 @@ func (m *MessageService) GetMessageList(ctx context.Context, groupID int64, user
 	if newerror.WhetherInterrupt(err, &finalErr) {
 		return nil, err
 	}
-	setLastVisitTimeReq := kitexgroupservice.SetLastVisitTimeReq{
-		CommonInfo: &kitexcommonmodel.CommonInfo{Trace: m.traceID},
-		UserId:     userID,
-		GroupId:    groupID,
-	}
-	_, err = m.serviceClient.GroupService.SetLastVisitTime(ctx, &setLastVisitTimeReq)
-	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
-		return nil, finalErr
-	}
 	if !exist {
 		return nil, newerror.MakeError(http.StatusOK, newerror.CodeSuccess, "Do Not Have Message", fmt.Errorf("Do Not Find Message"), newerror.LevelInfo)
 	}
@@ -425,15 +416,6 @@ func (m *MessageService) GetNewMessage(ctx context.Context, groupID int64, userI
 	}
 	if !exist {
 		return nil, nil, nil, nil, newerror.MakeError(http.StatusNotFound, newerror.CodeResourceNotFound, "You No Not Have New Message", fmt.Errorf("Try To Get New Message Without Any One New"), newerror.LevelInfo)
-	}
-	setLastVisitTimeReq := kitexgroupservice.SetLastVisitTimeReq{
-		CommonInfo: &kitexcommonmodel.CommonInfo{Trace: m.traceID},
-		UserId:     userID,
-		GroupId:    groupID,
-	}
-	_, err = m.serviceClient.GroupService.SetLastVisitTime(ctx, &setLastVisitTimeReq)
-	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
-		return nil, nil, nil, nil, finalErr
 	}
 	messageID = make([]int64, 0, len(messageStruct.Info))
 	messageType = make([]string, 0, len(messageStruct.Info))

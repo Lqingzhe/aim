@@ -42,6 +42,9 @@ func (w *WebSocketStruct) PushToUser(userID int64, deviceID string, data []byte)
 	if !ok {
 		return false
 	}
+	if !client.IsConnected {
+		return false
+	}
 	select {
 	case client.Send <- data:
 		return true

@@ -140,13 +140,19 @@ func getRedisWithGroup(ctx context.Context, dbContext *model.DBContext, info *Gr
 	if len(roleScores) == 0 || len(visitTime) == 0 {
 		return false, nil
 	}
+	infoMap := make(map[int64]int64, len(visitTime))
+	for i := range roleScores {
+		uid := visitTime[i].Member.(string)
+		userID, _ := strconv.ParseInt(uid, 10, 64)
+		infoMap[userID] = int64(visitTime[i].Score)
+	}
 	for i := range roleScores {
 		userID, _ := strconv.ParseInt(roleScores[i].Member.(string), 10, 64)
 		info.Info = append(info.Info, &GroupMemberInfo{
 			GroupID:      info.GroupID,
 			UserID:       userID,
 			Role:         translateFloatToRole(roleScores[i].Score),
-			LastReadTime: time.Unix(int64(visitTime[i].Score), 0),
+			LastReadTime: time.Unix(infoMap[userID], 0),
 		})
 	}
 	return true, nil

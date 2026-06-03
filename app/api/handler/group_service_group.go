@@ -547,16 +547,16 @@ func (h *HandlerConfig) GetLastVisitTime(c *gin.Context) {
 		newlog.SetGinLog(c, logger, "GetLastVisitTime", err2.LogLevel)
 		return
 	}
-	lastvisitTimeMap := make(map[string]int64)
+	lastVisitTimeMap := make(map[string]int64)
 	for i := range kitexResp.LastVisitTimeList {
-		lastvisitTimeMap[strconv.FormatInt(kitexResp.UserIdList[i], 10)] = kitexResp.LastVisitTimeList[i]
+		lastVisitTimeMap[strconv.FormatInt(kitexResp.UserIdList[i], 10)] = kitexResp.LastVisitTimeList[i]
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"code":    newerror.CodeSuccess,
 		"message": "success",
 		"data": gin.H{
 			"group_info": gin.H{
-				"last_visit_time": lastvisitTimeMap,
+				"last_visit_time": lastVisitTimeMap,
 			},
 		},
 	})
@@ -1050,4 +1050,61 @@ func (h *HandlerConfig) UpdateGroupInfoWithUser(c *gin.Context) {
 	}
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, userID, c.ClientIP(), c.FullPath())
 	newlog.SetGinLog(c, logger, "UpdateGroupInfoWithUser", newerror.LevelInfo)
+}
+func (h *HandlerConfig) SetLastVisitTime(c *gin.Context) {
+	var finalErr error
+	ctx := c.MustGet("ctx").(context.Context)
+	userID := c.GetInt64("user_id")
+	a, _ := c.Get("logger")
+	logger := a.(*zap.Logger)
+	var req struct {
+		GroupID int64 `json:"group_id,string"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"code":    newerror.CodeInvalidJSON,
+			"message": "JSON unmarshal error",
+		})
+		logger = newlog.AddError(logger, err, newerror.CodeInvalidJSON)
+		logger = newlog.AddGateWayInfo(logger, http.StatusBadRequest, userID, c.ClientIP(), c.FullPath())
+		newlog.SetGinLog(c, logger, "SetLastVisitTime", newerror.LevelInfo)
+		return
+	}
+	if req.GroupID == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"code":    newerror.CodeMissingParam,
+			"message": "Lack Necessary Param",
+		})
+		logger = newlog.AddError(logger, fmt.Errorf("Lack Necessary Param"), newerror.CodeMissingParam)
+		logger = newlog.AddGateWayInfo(logger, http.StatusBadRequest, userID, c.ClientIP(), c.FullPath())
+		newlog.SetGinLog(c, logger, "SetLastVisitTime", newerror.LevelInfo)
+		return
+	}
+	kitexReq := &kitexgroupservice.SetLastVisitTimeReq{
+		CommonInfo: &kitexcommonmodel.CommonInfo{Trace: c.GetString("trace")},
+		GroupId:    req.GroupID,
+		UserId:     userID,
+	}
+	_, err := h.serviceClient.GroupClient.SetLastVisitTime(ctx, kitexReq)
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		err2 := newerror.TranslateError(finalErr)
+		c.AbortWithStatusJSON(err2.HttpCode, gin.H{
+			"code":    err2.StatusCode,
+			"message": err2.HttpMessage,
+		})
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, c.ClientIP(), c.FullPath())
+		newlog.SetGinLog(c, logger, "SetLastVisitTime", err2.LogLevel)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code":    newerror.CodeSuccess,
+		"message": "success",
+	})
+	if finalErr != nil {
+		err2 := newerror.TranslateError(finalErr)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
+	}
+	logger = newlog.AddGateWayInfo(logger, http.StatusOK, userID, c.ClientIP(), c.FullPath())
+	newlog.SetGinLog(c, logger, "SetLastVisitTime", newerror.LevelInfo)
 }
