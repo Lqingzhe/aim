@@ -1,5 +1,5 @@
 // ============================================
-// 消息相关 - 添加已读状态
+// 消息相关 - 只显示自己消息的已读状态
 // ============================================
 
 // 全局消息处理函数，由 WebSocket 调用
@@ -47,9 +47,9 @@ async function handleNewMessage(data) {
 
         clearSessionNewMessageMark(currentSession.id);
 
-        // 收到新消息后，延迟更新已读状态
+        // 收到新消息后，延迟更新已读状态（更新自己发送的消息）
         setTimeout(() => {
-            updateMessagesReadStatus();
+            updateMyMessagesReadStatus();
         }, 500);
     } else if (sessionId) {
         console.log('消息属于其他会话，标记未读:', sessionId);
@@ -100,10 +100,9 @@ async function sendMessage() {
 }
 
 // ============================================
-// 消息相关 - 添加最后访问时间更新
+// 最后访问时间更新
 // ============================================
 
-// 更新用户在会话中的最后访问时间（群聊和私聊都调用）
 async function updateLastVisitTime(sessionId, sessionType) {
     if (!sessionId) {
         console.log('updateLastVisitTime: sessionId 为空，跳过');
@@ -114,7 +113,6 @@ async function updateLastVisitTime(sessionId, sessionType) {
     console.log('sessionId:', sessionId, 'sessionType:', sessionType);
 
     try {
-        // 群聊和私聊都使用 set-last-visit-time 接口
         const result = await apiCall('POST', '/group/set-last-visit-time', {
             group_id: String(sessionId)
         });
@@ -191,14 +189,13 @@ async function loadHistoryMessages(groupId, loadMore = false) {
             }
             addSystemMessage(`共加载 ${messages.length} 条消息`);
 
-            // 拉取消息成功后，更新最后访问时间（群聊和私聊都调用）
             console.log('准备调用 updateLastVisitTime, sessionId:', groupId, 'currentSession.type:', currentSession?.type);
             await updateLastVisitTime(groupId, currentSession?.type);
 
-            // 消息加载完成后，更新已读状态
+            // 消息加载完成后，更新自己消息的已读状态
             setTimeout(() => {
-                if (typeof updateMessagesReadStatus === 'function') {
-                    updateMessagesReadStatus();
+                if (typeof updateMyMessagesReadStatus === 'function') {
+                    updateMyMessagesReadStatus();
                 }
             }, 500);
         }
@@ -214,7 +211,10 @@ async function loadHistoryMessages(groupId, loadMore = false) {
     }
 }
 
-// 获取群聊中各成员的最后访问时间
+// ============================================
+// 已读状态获取和更新（只更新自己发送的消息）
+// ============================================
+
 async function getGroupReadStatus(groupId) {
     console.log('调用 getGroupReadStatus, groupId:', groupId);
     try {
@@ -231,7 +231,6 @@ async function getGroupReadStatus(groupId) {
     }
 }
 
-// 获取私聊的已读状态
 async function getPrivateReadStatus(sessionId) {
     console.log('调用 getPrivateReadStatus, sessionId:', sessionId);
     try {
@@ -259,108 +258,120 @@ async function getPrivateReadStatus(sessionId) {
     }
 }
 
-// 判断消息是否已读
-function checkIfMessageRead(message, readStatusMap, session) {
-    const sendTime = message.send_time_second;
+// 更新自己发送的消息的已读状态（群聊）
+async function updateMyGroupMessagesReadStatus(groupId) {
+    console.log('========== updateMyGroupMessagesReadStatus 开始 ==========');
+    console.log('groupId:', groupId);
 
-    if (session.type === 'group') {
-        const currentUserId = String(userID);
+    if (!groupId || currentSession?.type !== 'group') {
+        console.log('不是群聊或groupId为空，跳过');
+        return;
+    }
+
+    const readStatusMap = await getGroupReadStatus(groupId);
+    console.log('获取到的 readStatusMap:', readStatusMap);
+
+    if (!readStatusMap || Object.keys(readStatusMap).length === 0) {
+        console.log('readStatusMap 为空，无法更新已读状态');
+        return;
+    }
+
+    // 只查找自己发送的消息
+    const myMessages = document.querySelectorAll(`.message[data-user-id="${userID}"]`);
+    console.log('自己发送的消息数量:', myMessages.length);
+
+    for (const msgElement of myMessages) {
+        const sendTime = parseInt(msgElement.dataset.time);
+        const messageId = msgElement.dataset.messageId;
+
+        console.log(`--- 检查自己发送的消息: messageId=${messageId}, sendTime=${sendTime}`);
+
+        // 计算有多少其他人已读
         let readCount = 0;
         let totalOthers = 0;
 
-        for (const [userId, lastVisitTime] of Object.entries(readStatusMap)) {
-            if (userId !== currentUserId) {
+        for (const [otherUserId, lastVisitTime] of Object.entries(readStatusMap)) {
+            if (otherUserId !== String(userID)) {
                 totalOthers++;
-                if (lastVisitTime >= sendTime) {
+                const isRead = lastVisitTime >= sendTime;
+                if (isRead) {
                     readCount++;
                 }
             }
         }
 
-        if (totalOthers === 0) {
-            return 0;
-        }
-        if (readCount === totalOthers) {
-            return true;
-        }
-        return readCount;
-    } else {
-        const friendLastVisit = readStatusMap;
-        return friendLastVisit >= sendTime;
-    }
-}
+        console.log(`消息 ${messageId}: ${readCount}/${totalOthers} 人已读`);
 
-// 更新群聊消息的已读状态
-async function updateGroupReadStatus(groupId) {
-    console.log('updateGroupReadStatus 被调用, groupId:', groupId);
-    if (!groupId || currentSession?.type !== 'group') {
-        return;
-    }
-
-    const readStatusMap = await getGroupReadStatus(groupId);
-
-    if (Object.keys(readStatusMap).length === 0) {
-        return;
-    }
-
-    const messages = document.querySelectorAll('.message');
-
-    for (const msgElement of messages) {
-        const sendTime = parseInt(msgElement.dataset.time);
-        const userId = msgElement.dataset.userId;
-
-        if (userId !== String(userID)) {
-            const readResult = checkIfMessageRead({ send_time_second: sendTime }, readStatusMap, currentSession);
-            const readSpan = msgElement.querySelector('.message-read-status');
-
-            if (readSpan) {
-                if (readResult === true) {
-                    readSpan.textContent = '✓ 全部已读';
-                    readSpan.style.color = '#10b981';
-                } else if (typeof readResult === 'number') {
-                    readSpan.textContent = `${readResult} 人已读`;
-                    readSpan.style.color = readResult > 0 ? '#10b981' : '#9ca3af';
-                }
+        const readSpan = msgElement.querySelector('.message-read-status');
+        if (readSpan) {
+            if (totalOthers === 0) {
+                readSpan.textContent = '未读';
+                readSpan.style.color = '#9ca3af';
+            } else if (readCount > 0) {
+                readSpan.textContent = `${readCount} 人已读`;
+                readSpan.style.color = '#10b981';
+            } else {
+                readSpan.textContent = '未读';
+                readSpan.style.color = '#9ca3af';
             }
         }
     }
+    console.log('========== updateMyGroupMessagesReadStatus 结束 ==========');
 }
 
-// 更新私聊消息的已读状态
-async function updatePrivateReadStatus(sessionId) {
-    console.log('updatePrivateReadStatus 被调用, sessionId:', sessionId);
+// 更新自己发送的消息的已读状态（私聊）
+async function updateMyPrivateMessagesReadStatus(sessionId) {
+    console.log('========== updateMyPrivateMessagesReadStatus 开始 ==========');
+    console.log('sessionId:', sessionId);
+
     if (!sessionId || currentSession?.type !== 'session') {
+        console.log('不是私聊或sessionId为空，跳过');
         return;
     }
 
     const friendLastVisit = await getPrivateReadStatus(sessionId);
+    console.log('对方最后访问时间:', friendLastVisit);
 
     if (friendLastVisit === 0) {
+        console.log('无法获取对方已读状态');
         return;
     }
 
-    const messages = document.querySelectorAll('.message.self');
+    // 只查找自己发送的消息
+    const myMessages = document.querySelectorAll(`.message[data-user-id="${userID}"]`);
+    console.log('自己发送的消息数量:', myMessages.length);
 
-    for (const msgElement of messages) {
+    for (const msgElement of myMessages) {
         const sendTime = parseInt(msgElement.dataset.time);
+        const messageId = msgElement.dataset.messageId;
         const readSpan = msgElement.querySelector('.message-read-status');
 
-        if (readSpan && friendLastVisit >= sendTime) {
-            readSpan.textContent = '✓ 已读';
-            readSpan.style.color = '#10b981';
+        console.log(`消息 ${messageId}: sendTime=${sendTime}, 对方最后访问=${friendLastVisit}`);
+
+        if (readSpan) {
+            if (friendLastVisit >= sendTime) {
+                readSpan.textContent = '✓ 已读';
+                readSpan.style.color = '#10b981';
+                console.log(`  -> 更新为: 已读`);
+            } else {
+                readSpan.textContent = '未读';
+                readSpan.style.color = '#9ca3af';
+                console.log(`  -> 保持: 未读`);
+            }
         }
     }
+    console.log('========== updateMyPrivateMessagesReadStatus 结束 ==========');
 }
 
-// 更新所有消息的已读状态（统一入口）
-async function updateMessagesReadStatus() {
-    console.log('updateMessagesReadStatus 被调用, currentSession:', currentSession);
+// 统一入口：更新自己发送的消息的已读状态
+async function updateMyMessagesReadStatus() {
+    console.log('updateMyMessagesReadStatus 被调用, currentSession:', currentSession);
     if (!currentSession) return;
 
     if (currentSession.type === 'group') {
-        await updateGroupReadStatus(currentSession.id);
+        await updateMyGroupMessagesReadStatus(currentSession.id);
     } else if (currentSession.type === 'session') {
-        await updatePrivateReadStatus(currentSession.id);
+        await updateMyPrivateMessagesReadStatus(currentSession.id);
     }
 }
 
@@ -445,16 +456,10 @@ function addMessageToChat(message) {
         senderName = `用户 ${message.user_id}`;
     }
 
-    // 添加已读状态显示（初始显示加载中，后续更新）
+    // 只有自己发送的消息才显示已读状态，别人发送的不显示
     let readStatusHtml = '';
     if (isSelf) {
         readStatusHtml = '<span class="message-read-status" style="margin-left:8px;font-size:10px;color:#9ca3af;">未读</span>';
-    } else if (message.isRead !== undefined) {
-        if (message.isRead === true) {
-            readStatusHtml = '<span class="message-read-status" style="margin-left:8px;font-size:10px;color:#10b981;">✓ 全部已读</span>';
-        } else if (typeof message.isRead === 'number') {
-            readStatusHtml = `<span class="message-read-status" style="margin-left:8px;font-size:10px;color:${message.isRead > 0 ? '#10b981' : '#9ca3af'};">${message.isRead} 人已读</span>`;
-        }
     }
 
     meta.innerHTML = `${senderName} ${time}${readStatusHtml}`;
@@ -493,6 +498,7 @@ function addMessageToChatTop(message, groupId) {
         senderName = `用户 ${message.user_id}`;
     }
 
+    // 只有自己发送的消息才显示已读状态，别人发送的不显示
     let readStatusHtml = '';
     if (isSelf) {
         readStatusHtml = '<span class="message-read-status" style="margin-left:8px;font-size:10px;color:#9ca3af;">未读</span>';

@@ -57,12 +57,12 @@ function connectWebSocket() {
                     handleNewMessage(data);
                 }
 
-                // 收到新消息后，延迟更新最后访问时间（表示用户已读）
+                // 收到新消息后，延迟更新自己消息的已读状态
                 if (currentSession && String(data.session_id || data.group_id) === String(currentSession.id)) {
                     setTimeout(() => {
-                        if (typeof updateLastVisitTime === 'function') {
-                            console.log('收到新消息，更新最后访问时间');
-                            updateLastVisitTime(currentSession.id, currentSession.type);
+                        if (typeof updateMyMessagesReadStatus === 'function') {
+                            console.log('收到新消息，更新自己消息的已读状态');
+                            updateMyMessagesReadStatus();
                         }
                     }, 1000);
                 }
