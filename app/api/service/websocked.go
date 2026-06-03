@@ -117,10 +117,12 @@ func (w *WebSocketStruct) Unregister(userID int64, deviceID string) {
 	defer w.hub.Mu.Unlock()
 	if deviceID == "" {
 		for _, i := range w.hub.Client[userID] {
-			i.IsConnected = false
-			i.LastLogoutSecond = time.Now().Unix()
-			close(i.Send)
-			i.Conn.Close()
+			if i.IsConnected {
+				i.IsConnected = false
+				i.LastLogoutSecond = time.Now().Unix()
+				close(i.Send)
+				i.Conn.Close()
+			}
 		}
 	} else {
 		i, ok := w.hub.Client[userID][deviceID]

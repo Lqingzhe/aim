@@ -65,11 +65,9 @@ async function refreshAccessToken() {
 
             console.log('Token 刷新成功，新 access_token:', newAccessToken.substring(0, 30) + '...');
 
-            // 更新 sessionStorage
             sessionStorage.setItem('access_token', newAccessToken);
             sessionStorage.setItem('refresh_token', newRefreshToken);
 
-            // 更新全局变量
             window.accessToken = newAccessToken;
             window.refreshToken = newRefreshToken;
 
@@ -89,12 +87,30 @@ async function refreshAccessToken() {
     }
 }
 
-async function logout() {
-    console.log('执行登出...');
+// 退出单个设备（当前设备）
+async function logoutDevice() {
+    console.log('执行退出本设备...');
     try {
-        await apiCall('POST', '/user/logout-a-device', {});
+        const result = await apiCall('POST', '/user/logout-a-device', {});
+        console.log('退出本设备结果:', result);
     } catch (e) {
-        console.log('登出接口调用失败:', e);
+        console.log('退出本设备接口调用失败:', e);
+    }
+    sessionStorage.clear();
+    if (window.webSocket && window.webSocket.readyState === WebSocket.OPEN) {
+        window.webSocket.close();
+    }
+    window.location.href = '/login';
+}
+
+// 退出所有设备
+async function logoutAll() {
+    console.log('执行退出所有设备...');
+    try {
+        const result = await apiCall('POST', '/user/logout-all-device', {});
+        console.log('退出所有设备结果:', result);
+    } catch (e) {
+        console.log('退出所有设备接口调用失败:', e);
     }
     sessionStorage.clear();
     if (window.webSocket && window.webSocket.readyState === WebSocket.OPEN) {
