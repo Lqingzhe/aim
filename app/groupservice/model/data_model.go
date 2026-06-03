@@ -46,7 +46,6 @@ func (_ *SessionInfo) Data() {}
 type GroupApplyInfo struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
 
 	GoalID      int64 `gorm:"NOT NULL;uniqueIndex:group_and_user_id;comment:goal_id"`
 	ApplyUserID int64 `gorm:"NOT NULL;uniqueIndex:group_and_user_id;comment:apply_user_id"`

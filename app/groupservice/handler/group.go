@@ -225,7 +225,7 @@ func (s *GroupServiceImpl) RefuseGroupApply(ctx context.Context, req *kitexgroup
 	}()
 	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
 	serviceStruct := service.NewGroup(req.CommonInfo.Trace, s.GroupNoticeTopic, s.SystemTopic, s.DBContext, s.GroupConfig, s.SnowNode, s.ServiceClient)
-	err = serviceStruct.AgreeGroupApply(ctx, req.GroupId, req.UserId, req.GoalUserId)
+	err = serviceStruct.RefuseGroupApply(ctx, req.GroupId, req.UserId, req.GoalUserId)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
 		logger = newlog.AddError(logger, err2, err2.StatusCode)

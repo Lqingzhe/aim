@@ -34,7 +34,7 @@ func GetMysqlConfig(data []byte) commonmodel.MysqlConfig {
 	if err := yaml.Unmarshal(data, &newStruct); err != nil {
 		log.Fatalf("Unmarshal Mysql Config Failed: %v", err)
 	}
-	newStruct.MysqlConfig.Url = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&loc=Local&parseTime=true&timeout=%s&readTimeout=%s&writeTimeout=%s",
+	newStruct.MysqlConfig.Url = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&loc=Local&parseTime=true&timeout=%s&readTimeout=%s&writeTimeout=%s",
 		newStruct.MysqlConfig.Username,
 		newStruct.MysqlConfig.Password,
 		newStruct.MysqlConfig.Host,

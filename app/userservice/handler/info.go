@@ -3,6 +3,7 @@ package handler
 import (
 	"aim/app/userservice/model"
 	"aim/app/userservice/service"
+	"aim/kitex_gen/kitexcommonmodel"
 	"aim/kitex_gen/kitexuserservice"
 	newerror "aim/pkg/error"
 	newlog "aim/pkg/log"
@@ -17,13 +18,23 @@ func (s *UserServiceImpl) GetUserInfo(ctx context.Context, req *kitexuserservice
 	serviceStruct := service.NewUserInfo(s.DBContext, &model.UserInfo{
 		UserID: req.UserId,
 	}, nil)
-	result, err := serviceStruct.GetOtherUserInfo(ctx)
+	userInfo, remarkList, err := serviceStruct.GetUserInfo(ctx)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
 		newlog.Log(logger, err2.LogLevel, "GetUserInfo")
 		return nil, err
 	}
-	resp = &kitexuserservice.GetUserInfoResp{UserInfo: service.TranslateUserInfoModel(result)}
+	remarkListResp := make([]*kitexcommonmodel.RemarkInfo, 0, len(remarkList))
+	for i := range remarkList {
+		remarkListResp = append(remarkListResp, &kitexcommonmodel.RemarkInfo{
+			GoalUserID: remarkList[i].GoalUserID,
+			NickName:   remarkList[i].NickName,
+		})
+	}
+	resp = &kitexuserservice.GetUserInfoResp{
+		UserInfo:   service.TranslateUserInfoModel(userInfo),
+		RemarkInfo: remarkListResp,
+	}
 	newlog.Log(logger, newerror.LevelInfo, "GetUserInfo")
 	return resp, nil
 }
@@ -81,7 +92,6 @@ func (s *UserServiceImpl) Remark(ctx context.Context, req *kitexuserservice.Rema
 		err = newerror.TranslateError(err).MarshalError()
 	}()
 	logger := newlog.AddTraceID(s.Logger, req.CommonInfo.Trace)
-
 	serviceStruct := service.NewUserInfo(s.DBContext, nil, &model.RemarkInfo{
 		UserID:     req.RemarkInfo.UserID,
 		GoalUserID: req.RemarkInfo.GoalUserID,

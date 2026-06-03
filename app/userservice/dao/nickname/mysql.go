@@ -33,7 +33,7 @@ func updateMysql(ctx context.Context, dbContext *model.DBContext, info *NickName
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:UpdateMysql")
-	result := dbContext.Mysql.Client.WithContext(ctx).Model(&model.RemarkInfo{}).Where("user_id = ?", info.RemarkInfo.UserID).Where("goal_id = ?", info.RemarkInfo.GoalUserID).Updates(info.RemarkInfo)
+	result := dbContext.Mysql.Client.WithContext(ctx).Model(&model.RemarkInfo{}).Where("user_id = ?", info.RemarkInfo.UserID).Where("goal_user_id = ?", info.RemarkInfo.GoalUserID).Updates(info.RemarkInfo)
 	if result.Error == nil && result.RowsAffected == 0 {
 		return false, nil
 	}
@@ -46,7 +46,7 @@ func deleteMysql(ctx context.Context, dbContext *model.DBContext, info *NickName
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:DeleteMysql")
-	result := dbContext.Mysql.Client.WithContext(ctx).Where("user_id = ?", info.RemarkInfo.UserID).Where("goal_id = ?", info.RemarkInfo.GoalUserID).Delete(&info.RemarkInfo)
+	result := dbContext.Mysql.Client.WithContext(ctx).Where("user_id = ?", info.RemarkInfo.UserID).Where("goal_user_id = ?", info.RemarkInfo.GoalUserID).Delete(&info.RemarkInfo)
 	if err2 := newerror.IsMysqlError(result); err2 != nil {
 		return err2
 	}

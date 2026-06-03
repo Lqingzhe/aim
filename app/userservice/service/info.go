@@ -119,6 +119,15 @@ func (i *Info) Remark(ctx context.Context, userConfig commonmodel.UserConfig) (e
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("remark:Remark")
+	//var finalErr error
+	//loginInfoStruct := userlogin.NewStruct(i.UserInfo.UserID, "", "")
+	//exist, err := dao.Get(ctx, loginInfoStruct, i.dbContext)
+	//if newerror.WhetherInterrupt(err, &finalErr) {
+	//	return finalErr
+	//}
+	//if !exist {
+	//	return newerror.MakeError(http.StatusNotFound, newerror.CodeUserNotFound, "The User Is Not Exist", fmt.Errorf("Try To Remark Nickname To Unexist User"), newerror.LevelInfo)
+	//}
 	remarkInfo := nickname.NewStruct(i.RemarkInfo.UserID, i.RemarkInfo.GoalUserID, i.RemarkInfo.NickName)
 	if i.RemarkInfo.NickName == "" {
 		err = dao.Delete(ctx, remarkInfo, i.dbContext)
@@ -141,5 +150,4 @@ func (i *Info) Remark(ctx context.Context, userConfig commonmodel.UserConfig) (e
 		}
 	}
 	return nil
-
 }

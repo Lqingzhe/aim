@@ -9,7 +9,8 @@ let deviceID = sessionStorage.getItem('device_id');
 let accessToken = sessionStorage.getItem('access_token');
 let refreshToken = sessionStorage.getItem('refresh_token');
 
-let ws = null;
+// 注意：这里不声明任何与 WebSocket 相关的变量
+
 let currentSession = null;
 let sessions = [];
 let isRefreshing = false;

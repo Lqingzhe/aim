@@ -6,7 +6,6 @@ import (
 	newerror "aim/pkg/error"
 	"aim/tool"
 	"context"
-	"log"
 	"time"
 )
 
@@ -32,7 +31,6 @@ func WithWhereMemberID(info *GroupMember) {
 func WithVisitTime(time []time.Time) operate {
 	return func(info *GroupMember) {
 		info.LastReadTime = time
-		log.Printf("groupmember:db_manage:WithVisitTime:info.LastReadTime:%v", info.LastReadTime)
 	}
 }
 func NewStruct(groupID int64, members []int64, role []commonmodel.GroupRole, Operations ...operate) *GroupMember {
@@ -47,13 +45,11 @@ func NewStruct(groupID int64, members []int64, role []commonmodel.GroupRole, Ope
 	if role == nil {
 		newStruct.Role = make([]commonmodel.GroupRole, len(members))
 	}
-	log.Printf("groupmember:db_manage:NewStruct1:%v", newStruct.LastReadTime)
 	if len(Operations) > 0 {
 		for _, Operate := range Operations {
 			Operate(newStruct)
 		}
 	}
-	log.Printf("groupmember:db_manage:NewStruct2:%v", newStruct.LastReadTime)
 	return newStruct
 }
 

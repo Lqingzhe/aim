@@ -17,7 +17,7 @@ func (h *HandlerConfig) LoginPage(c *gin.Context) {
 		"title": "IM 即时通讯",
 	})
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, -1, c.ClientIP(), c.FullPath())
-	newlog.SetGinLog(c, logger, "ChatPage", newerror.LevelInfo)
+	newlog.SetGinLog(c, logger, "LoginPage", newerror.LevelInfo)
 }
 
 // ChatPage 聊天主页面（需要登录）
@@ -42,5 +42,5 @@ func (h *HandlerConfig) IndexPage(c *gin.Context) {
 	logger := a.(*zap.Logger)
 	c.Redirect(http.StatusFound, "/login")
 	logger = newlog.AddGateWayInfo(logger, http.StatusOK, -1, c.ClientIP(), c.FullPath())
-	newlog.SetGinLog(c, logger, "ReleaseMute", newerror.LevelInfo)
+	newlog.SetGinLog(c, logger, "IndexPage", newerror.LevelInfo)
 }

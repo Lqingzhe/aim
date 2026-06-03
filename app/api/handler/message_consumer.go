@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (h *HandlerConfig) Consumer(logger *zap.Logger, equipID int64, poolLimit int64) {
+func (h *HandlerConfig) Consumer(logger *zap.Logger, poolLimit int64) {
 	logger = newlog.AddTraceID(logger, "-1")
 	ConsumerService := service.NewConsumerService(service.NewWebSocket(h.hub), h.serviceClient.MessageClient)
 	errPool := make(chan *newerror.Error, poolLimit)

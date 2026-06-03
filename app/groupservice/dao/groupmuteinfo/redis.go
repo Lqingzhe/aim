@@ -20,7 +20,7 @@ func setRedis(ctx context.Context, dbContext *model.DBContext, info *MuteInfo) (
 		MuteEndTime = time.Now().Add(10 * time.Minute)
 	}
 	KEY := []string{fmt.Sprintf("group_mute_info:%d%d", info.GroupID, info.UserID)}
-	VALUE := []any{info.MuteEndTime.Sub(time.Now()).Seconds(), "mute_endtime", MuteEndTime.Unix(), "mute_reason", info.MuteReason}
+	VALUE := []any{int64(info.MuteEndTime.Sub(time.Now()).Seconds()), "mute_endtime", MuteEndTime.Unix(), "mute_reason", info.MuteReason}
 	result := dbContext.Redis.Script[commonmodel.HSETEX].Run(ctx, dbContext.Redis.Client, KEY, VALUE)
 	if result.Err() != nil {
 		if isContext, err2 := newerror.IsContextError(err); isContext {

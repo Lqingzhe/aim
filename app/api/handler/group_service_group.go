@@ -465,6 +465,7 @@ func (h *HandlerConfig) GetGroupApplyList(c *gin.Context) {
 	}
 	kitexReq := &kitexgroupservice.GetGroupApplyListReq{
 		CommonInfo: &kitexcommonmodel.CommonInfo{Trace: c.GetString("trace")},
+		UserId:     userID,
 		GroupId:    req.GroupID,
 	}
 	kitexResp, err := h.serviceClient.GroupClient.GetGroupApplyList(ctx, kitexReq)

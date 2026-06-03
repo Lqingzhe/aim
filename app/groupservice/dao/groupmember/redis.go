@@ -80,8 +80,12 @@ func deleteRedisWithMember(ctx context.Context, dbContext *model.DBContext, info
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("redis:DeleteRedisWithMember")
 	pipe := dbContext.Redis.Client.TxPipeline()
-	pipe.ZRem(ctx, "group_member:role:"+strconv.FormatInt(info.GroupID, 10), info.members)
-	pipe.ZRem(ctx, "group_member:visit_time:"+strconv.FormatInt(info.GroupID, 10), info.members)
+	members := make([]any, 0, len(info.members))
+	for i := range info.members {
+		members = append(members, info.members[i])
+	}
+	pipe.ZRem(ctx, "group_member:role:"+strconv.FormatInt(info.GroupID, 10), members)
+	pipe.ZRem(ctx, "group_member:visit_time:"+strconv.FormatInt(info.GroupID, 10), members)
 	_, err = pipe.Exec(ctx)
 	if err != nil {
 		return newerror.MakeError(http.StatusInternalServerError, newerror.CodeDatabaseError, "Database Error", err, newerror.LevelError)

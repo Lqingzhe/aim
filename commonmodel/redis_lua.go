@@ -43,7 +43,7 @@ while keyPos <= keyLen do
 			for k = 1,keyPos do
 				redis.pcall("DEL",KEYS[k])
 			end
-			return redis.error_reply(result.err)
+			return redis.error_reply(expireResult.err)
 		end
 	end
 	keyPos = keyPos + 1

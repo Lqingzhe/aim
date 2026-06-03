@@ -46,7 +46,7 @@ func NewConfig(logger *zap.Logger, snowNode *snowflake.Node, dbContext *model.DB
 }
 func (A *ApiConfig) Begin(port string) {
 	handlerConfig := handler.NewHandlerConfig(A.snowNode, A.dbContext, A.tokenConfig, A.serviceClient, A.websocketUpgrader, A.consumer)
-	handlerConfig.Consumer(A.logger, A.equipID, 75) //启动消息消费者
+	handlerConfig.Consumer(A.logger, 75) //启动消息消费者
 
 	g := gin.New()
 	gin.SetMode(gin.ReleaseMode)
@@ -81,14 +81,13 @@ func (A *ApiConfig) Begin(port string) {
 			user.POST("/get-user-info", middleware.SetTimeOut(A.RoutTimeOut["/user/get-user-info"]), handlerConfig.GetUserInfo)
 			user.POST("/get-other-user-info", middleware.SetTimeOut(A.RoutTimeOut["/user/get-other-user-info"]), handlerConfig.GetOtherUserInfo)
 			user.POST("/update-user-info", middleware.SetTimeOut(A.RoutTimeOut["/user/update-user-info"]), handlerConfig.UpdateUserInfo)
-			user.POST("remark", middleware.SetTimeOut(A.RoutTimeOut["/user/remark"]), handlerConfig.Remark)
+			user.POST("/remark", middleware.SetTimeOut(A.RoutTimeOut["/user/remark"]), handlerConfig.Remark)
 		}
 		group := needLogin.Group("/group")
 		{
 			{
 				group.POST("/create-group", middleware.SetTimeOut(A.RoutTimeOut["/group/create-group"]), handlerConfig.CreateGroup)
 
-				//添加功能：删除聊天记录
 				group.POST("/delete-group", middleware.SetTimeOut(A.RoutTimeOut["/group/delete-group"]), handlerConfig.DeleteGroup)
 			}
 			{
@@ -96,7 +95,7 @@ func (A *ApiConfig) Begin(port string) {
 				group.POST("/set-group-apply", middleware.SetTimeOut(A.RoutTimeOut["/group/set-group-apply"]), handlerConfig.SetGroupApply)
 				group.POST("/get-group-apply-list", middleware.SetTimeOut(A.RoutTimeOut["/group/get-group-apply-list"]), handlerConfig.GetGroupApplyList)
 				group.POST("/agree-group-apply", middleware.SetTimeOut(A.RoutTimeOut["/group/agree-group-apply"]), handlerConfig.AgreeGroupApply)
-				group.POST("/refuse-friend-apply", middleware.SetTimeOut(A.RoutTimeOut["/group/refuse-friend-apply"]), handlerConfig.RefuseFriendApply)
+				group.POST("/refuse-group-apply", middleware.SetTimeOut(A.RoutTimeOut["/group/refuse-group-apply"]), handlerConfig.RefuseGroupApply)
 				group.POST("/leave-group", middleware.SetTimeOut(A.RoutTimeOut["/group/leave-group"]), handlerConfig.LeaveGroup)
 			}
 			{
@@ -115,6 +114,7 @@ func (A *ApiConfig) Begin(port string) {
 			}
 			{
 				group.POST("/apply-for-friend", middleware.SetTimeOut(A.RoutTimeOut["/group/apply-for-friend"]), handlerConfig.ApplyForFriend)
+				group.POST("/refuse-friend-apply", middleware.SetTimeOut(A.RoutTimeOut["/group/refuse-friend-apply"]), handlerConfig.RefuseFriendApply)
 				group.POST("/get-friend-apply-list", middleware.SetTimeOut(A.RoutTimeOut["/group/get-friend-apply-list"]), handlerConfig.GetFriendApplyList)
 				group.POST("/creat-session", middleware.SetTimeOut(A.RoutTimeOut["/group/creat-session"]), handlerConfig.CreatSession)
 
@@ -144,7 +144,7 @@ func (A *ApiConfig) Begin(port string) {
 
 	err := g.Run(":" + port)
 	if err != nil {
-		newlog.LogInitError(A.logger, err, "http begin error")
+		newlog.LogInitFatal(A.logger, err, "http begin error")
 		return
 	}
 }

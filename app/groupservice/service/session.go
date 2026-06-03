@@ -188,7 +188,7 @@ func (s *ServiceSession) ApplyForFriend(ctx context.Context, userID int64, goalU
 	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
 		return finalErr
 	}
-	groupApplyStruct := groupapply.NewStruct(goalUserID, userID)
+	groupApplyStruct := groupapply.NewStruct(goalUserID, userID, groupapply.WithGoalID, groupapply.WithApplyUserID)
 	exist, err := dao.Get(ctx, groupApplyStruct, s.dbContext)
 	if err != nil {
 		return err

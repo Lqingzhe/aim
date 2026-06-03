@@ -748,7 +748,7 @@ func (s *ServiceGroup) RevokeManager(ctx context.Context, userID int64, goalUser
 		Mysql: tool.BeginMysqlTransaction(s.dbContext.Mysql),
 		Redis: s.dbContext.Redis,
 	}
-	groupWithUserStruct := groupwithuser.NewStruct(groupID, userID, "", commonmodel.Member, groupwithuser.WithGroupID, groupwithuser.WithUserID)
+	groupWithUserStruct := groupwithuser.NewStruct(groupID, goalUserID, "", commonmodel.Member, groupwithuser.WithGroupID, groupwithuser.WithUserID)
 	exist, err = dao.Update(ctx, groupWithUserStruct, DB)
 	if err != nil {
 		DB.Mysql.Client.Rollback()

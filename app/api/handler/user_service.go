@@ -287,6 +287,8 @@ func (h *HandlerConfig) GetUserInfo(c *gin.Context) {
 		})
 		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		logger = newlog.AddGateWayInfo(logger, err2.HttpCode, userID, c.ClientIP(), c.FullPath())
+		newlog.SetGinLog(c, logger, "GetUserInfo", newerror.LevelInfo)
+		return
 	}
 	type userInfo struct {
 		UserID        int64  `json:"user_id,string"`
@@ -302,11 +304,11 @@ func (h *HandlerConfig) GetUserInfo(c *gin.Context) {
 		NickName   string `json:"nick_name"`
 	}
 	RemarkInfoList := make([]remarkInfo, len(kitexResp.RemarkInfo))
-	for i, j := range kitexResp.RemarkInfo {
-		RemarkInfoList[i] = remarkInfo{
+	for _, j := range kitexResp.RemarkInfo {
+		RemarkInfoList = append(RemarkInfoList, remarkInfo{
 			GoalUserID: j.GoalUserID,
 			NickName:   j.NickName,
-		}
+		})
 	}
 	var resp = struct {
 		UserInfo    userInfo
