@@ -16,8 +16,8 @@ type entry struct {
 
 type L1Cache struct {
 	items map[string]*entry
-	mapMu sync.RWMutex
-	epoch int64
+	mapMu       sync.RWMutex
+	globalEpoch int64
 }
 type DBContext interface {
 	GetDBContext(string) any
@@ -71,11 +71,11 @@ func Get[I Info, D DBContext, rawInfo any](ctx context.Context, c *L1Cache, dbCo
 			}
 		} else {
 			c.mapMu.Lock()
-			c.epoch++
+			c.globalEpoch++
 			c.items[info.GetKey()] = &entry{
 				ready:   make(chan struct{}),
 				loading: true,
-				epoch:   c.epoch,
+				epoch:   c.globalEpoch,
 			}
 			c.mapMu.Unlock()
 			c.mapMu.RLock()

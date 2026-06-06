@@ -26,3 +26,9 @@ type KafkaSystemMessage struct {
 	MessageType    MessageType    `json:"message_type"`
 	MessageCode    MessageCode    `json:"message_code"`
 }
+type KafkaAiMessage struct {
+	TraceID string `json:"trace_id"`
+	UserID  int64  `json:"user_id"`
+	GroupID int64  `json:"group_id"`
+	Message string `json:"message"`
+}

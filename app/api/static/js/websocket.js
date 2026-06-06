@@ -2,6 +2,9 @@
 // WebSocket 连接和消息处理
 // ============================================
 
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
+
 function connectWebSocket() {
     const token = sessionStorage.getItem('access_token');
     if (!token) {
@@ -16,6 +19,7 @@ function connectWebSocket() {
 
     window.webSocket.onopen = () => {
         console.log('WebSocket 已连接');
+        reconnectAttempts = 0; // 连接成功，重置重连次数
         if (typeof addSystemMessage === 'function') {
             addSystemMessage('✅ WebSocket 连接成功');
         }
@@ -98,19 +102,40 @@ function connectWebSocket() {
         }
     };
 
-    window.webSocket.onclose = (event) => {
+    window.webSocket.onclose = async (event) => {
         console.log('WebSocket 已断开, code:', event.code, 'reason:', event.reason);
-        if (typeof addSystemMessage === 'function') {
-            addSystemMessage('⚠️ WebSocket 连接已断开，3秒后重连...');
-        }
-        stopHeartbeatTimer();
 
-        setTimeout(() => {
-            if (sessionStorage.getItem('access_token')) {
-                console.log('尝试重新连接 WebSocket...');
+        // 检查是否是 token 过期导致的关闭（后端关闭连接时可能会发送特定信息）
+        // 或者直接尝试刷新 token
+        if (sessionStorage.getItem('access_token')) {
+            console.log('尝试刷新 token...');
+
+            // 尝试刷新 token
+            const refreshed = await refreshAccessToken();
+
+            if (refreshed) {
+                console.log('Token 刷新成功，使用新 token 重新连接 WebSocket');
+                if (typeof addSystemMessage === 'function') {
+                    addSystemMessage('🔄 Token 已刷新，正在重新连接...');
+                }
+                stopHeartbeatTimer();
+                // 使用新 token 重新连接
                 connectWebSocket();
+            } else {
+                console.log('Token 刷新失败，跳转到登录页');
+                if (typeof addSystemMessage === 'function') {
+                    addSystemMessage('❌ Token 刷新失败，请重新登录');
+                }
+                sessionStorage.clear();
+                window.location.href = '/login';
             }
-        }, 3000);
+        } else {
+            console.log('没有 token，跳转到登录页');
+            if (typeof addSystemMessage === 'function') {
+                addSystemMessage('⚠️ WebSocket 连接已断开，请重新登录');
+            }
+            window.location.href = '/login';
+        }
     };
 
     window.webSocket.onerror = (error) => {

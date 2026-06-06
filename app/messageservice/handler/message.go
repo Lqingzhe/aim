@@ -20,6 +20,7 @@ func (s *KitexMessageServiceImpl) SendMessage(ctx context.Context, req *kitexmes
 	messageID, err := serviceStruct.SendMessage(ctx, req.GroupId, req.UserId, req.MessageContent, req.IsAi)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "SendMessage")
 		return nil, err2
 	}
@@ -38,6 +39,7 @@ func (s *KitexMessageServiceImpl) SendFile(ctx context.Context, req *kitexmessag
 	messageID, err := serviceStruct.SendFile(ctx, req.GroupId, req.UserId, req.FileName, req.ContentType, req.DataStream)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "SendFile")
 		return nil, err2
 	}
@@ -56,6 +58,7 @@ func (s *KitexMessageServiceImpl) SendVoice(ctx context.Context, req *kitexmessa
 	messageID, err := serviceStruct.SendVoice(ctx, req.GroupId, req.UserId, req.ContentType, req.VoiceTimeSecond, req.DataStream)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "SendVoice")
 		return nil, err2
 	}
@@ -74,6 +77,7 @@ func (s *KitexMessageServiceImpl) SendPicture(ctx context.Context, req *kitexmes
 	messageID, err := serviceStruct.SendPicture(ctx, req.GroupId, req.UserId, req.ContentType, req.DataStream)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "SendPicture")
 		return nil, err2
 	}
@@ -92,6 +96,7 @@ func (s *KitexMessageServiceImpl) WithdrawMessage(ctx context.Context, req *kite
 	err = serviceStruct.WithdrawMessage(ctx, req.GroupId, req.UserId, req.MessageId)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "WithdrawMessage")
 		return nil, err2
 	}
@@ -107,6 +112,7 @@ func (s *KitexMessageServiceImpl) DeleteMessageAllGroup(ctx context.Context, req
 	err = serviceStruct.DeleteMessageAllGroup(ctx, req.GroupId)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "DeleteMessageAllGroup")
 		return nil, err2
 	}
@@ -124,6 +130,7 @@ func (s *KitexMessageServiceImpl) GetMessageList(ctx context.Context, req *kitex
 	messageList, err := serviceStruct.GetMessageList(ctx, req.GroupId, req.UserId, req.StartTimeSecond, req.EndTimeSecond)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "GetMessageList")
 		return nil, err2
 	}
@@ -158,6 +165,7 @@ func (s *KitexMessageServiceImpl) GetNewMessage(ctx context.Context, req *kitexm
 	messageID, sendTimeSecond, messageType, messageContent, err := serviceStruct.GetNewMessage(ctx, req.GroupId, req.UserId)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "GetNewMessage")
 		return nil, err2
 	}
@@ -180,6 +188,7 @@ func (s *KitexMessageServiceImpl) GetFileContent(ctx context.Context, req *kitex
 	dataStream, contentType, err := serviceStruct.GetFileContent(ctx, req.GroupId, req.UserId, req.MessageId)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "GetFileContent")
 		return nil, err2
 	}
@@ -201,6 +210,7 @@ func (s *KitexMessageServiceImpl) SendGroupNotice(ctx context.Context, req *kite
 	err = serviceStruct.SendGroupNotice(ctx, req.GroupId, req.UserId, req.MessageContent)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "SendGroupNotice")
 		return nil, err2
 	}

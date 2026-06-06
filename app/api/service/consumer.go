@@ -6,12 +6,12 @@ import (
 	"aim/kitex_gen/kitexmessageservice/kitexmessageservice"
 	newerror "aim/pkg/error"
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/IBM/sarama"
+	"github.com/bytedance/sonic"
 )
 
 type Consumer struct {
@@ -25,7 +25,7 @@ func NewConsumerService(websocketStruct *WebSocketStruct, MessageClient kitexmes
 		MessageClient:   MessageClient,
 	}
 }
-func (c *Consumer) Consumer(msg *sarama.ConsumerMessage) (err *newerror.Error) {
+func (c *Consumer) Consumer(msg *sarama.ConsumerMessage) (traceID string, err *newerror.Error) {
 	defer func(trace string) {
 		if err != nil {
 			err = err.AddErrorTrace(trace).(*newerror.Error)
@@ -35,40 +35,67 @@ func (c *Consumer) Consumer(msg *sarama.ConsumerMessage) (err *newerror.Error) {
 			err = newerror.TranslateError(newerror.MakeKafkaError(newerror.CodeInternalError, fmt.Errorf("%v", err2), newerror.LevelError)).AddErrorTrace(trace).(*newerror.Error)
 		}
 	}("consumer:Consumer")
-	var base struct {
-		TraceID    string
-		GoalUserID []int64         `json:"goal_user_id"`
-		Data       json.RawMessage `json:"data"`
+	base := make(map[string]any)
+	if err2 := sonic.Unmarshal(msg.Value, &base); err2 != nil {
+		return "", newerror.MakeKafkaError(newerror.CodeInvalidJSON, err2, newerror.LevelWarn)
 	}
-	if err2 := json.Unmarshal(msg.Value, &base); err2 != nil {
-		return newerror.MakeKafkaError(newerror.CodeInvalidJSON, err2, newerror.LevelWarn)
+	var ok bool
+	goalUserIDInterface, ok := base["goal_user_id"].([]interface{})
+	if !ok {
+		return "", newerror.MakeKafkaError(newerror.CodeInternalError, fmt.Errorf("goal_user_id Is Not Exist Or Not Array"), newerror.LevelError)
 	}
-	goalUserAndDeviceIDList := make([]string, 0, len(base.GoalUserID)*3)
-	for _, id := range base.GoalUserID {
+	delete(base, "goal_user_id")
+
+	// 转换为 []int64
+	goalUserID := make([]int64, 0, len(goalUserIDInterface))
+	for _, v := range goalUserIDInterface {
+		switch val := v.(type) {
+		case float64:
+			goalUserID = append(goalUserID, int64(val))
+		case int64:
+			goalUserID = append(goalUserID, val)
+		case int:
+			goalUserID = append(goalUserID, int64(val))
+		default:
+			return "", newerror.MakeKafkaError(newerror.CodeInternalError, fmt.Errorf("goal_user_id element not a number"), newerror.LevelError)
+		}
+	}
+	traceID, ok = base["trace_id"].(string)
+	if !ok {
+		return "", newerror.MakeKafkaError(newerror.CodeInternalError, fmt.Errorf("trace_id Is Not Exist Or []int64"), newerror.LevelError)
+	}
+	delete(base, "goal_user_id")
+	delete(base, "trace_id")
+	goalUserAndDeviceIDList := make([]string, 0, len(goalUserID)*3)
+	Data, err2 := sonic.Marshal(base)
+	if err2 != nil {
+		return traceID, newerror.MakeKafkaError(newerror.CodeInvalidJSON, err2, newerror.LevelError)
+	}
+	for _, id := range goalUserID {
 		for deviceID := range c.hub.Client[id] {
-			if !c.WebSocketStruct.PushToUser(id, deviceID, base.Data) {
+			if !c.WebSocketStruct.PushToUser(id, deviceID, Data) {
 				goalUserAndDeviceIDList = append(goalUserAndDeviceIDList, strconv.FormatInt(id, 10)+deviceID)
 			}
 		}
 	}
 	if len(goalUserAndDeviceIDList) > 0 {
 		setOfflineMessageReq := kitexmessageservice2.SetOfflineMessageReq{
-			CommonInfo:          &kitexcommonmodel.CommonInfo{Trace: base.TraceID},
+			CommonInfo:          &kitexcommonmodel.CommonInfo{Trace: traceID},
 			GoalUserAndDeviceId: goalUserAndDeviceIDList,
-			JsonData:            base.Data,
+			JsonData:            Data,
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
 		_, err2 := c.MessageClient.SetOfflineMessage(ctx, &setOfflineMessageReq)
 		if err2 != nil {
 			if a, err := newerror.IsContextError(err2); a {
-				return err
+				return traceID, err
 			}
 			err = newerror.TranslateError(err2)
-			return err
+			return traceID, err
 		}
 	}
-	return nil
+	return traceID, nil
 }
 
 //	func (consumer *Consumer) ConsumeGroupNoticeTopic(msg *sarama.ConsumerMessage) (err *newerror.Error) {

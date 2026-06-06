@@ -6,6 +6,7 @@ import (
 	"aim/app/messageservice/dao/offlinemessage"
 	"aim/app/messageservice/model"
 	"aim/commonmodel"
+	"aim/kitex_gen/kitexaiservice"
 	"aim/kitex_gen/kitexcommonmodel"
 	"aim/kitex_gen/kitexfileservice"
 	"aim/kitex_gen/kitexgroupservice"
@@ -149,11 +150,13 @@ func (m *MessageService) SendMessage(ctx context.Context, groupID int64, userID 
 			return 0, newerror.MakeError(http.StatusInternalServerError, newerror.CodeMessageQueueError, "Internal Error, Use '@' Later", err, newerror.LevelError)
 		}
 	} else if aiMessage, isNeedAi := tool.GetMessageAiChatMessage(messageContent); isNeedAi {
-		//向aiService调用rcp，由aiService决定是降级熔断还是向kafka发送消息
-		//返回的error存在warn级别的，需IsInterrupt
-		///err=
-		_ = fmt.Sprintf("%s", aiMessage)
-
+		sendMessageToAiReq := kitexaiservice.SendMessageToAiReq{
+			CommonInfo: &kitexcommonmodel.CommonInfo{Trace: m.traceID},
+			UserId:     userID,
+			GroupId:    groupID,
+			Message:    aiMessage,
+		}
+		_, err = m.serviceClient.AiService.SendMessageToAi(ctx, &sendMessageToAiReq)
 		if newerror.WhetherInterrupt(err, &finalErr) {
 			return 0, err
 		}
@@ -482,8 +485,8 @@ func (m *MessageService) SendGroupNotice(ctx context.Context, groupID int64, use
 		UserId:  userID,
 	}
 	GetGroupOrSessionRoleAndExistResp, err := m.serviceClient.GroupService.GetGroupOrSessionRoleAndExist(ctx, &GetGroupOrSessionRoleAndExistReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return finalErr
 	}
 	if !GetGroupOrSessionRoleAndExistResp.Exist {
 		return newerror.MakeError(http.StatusNotFound, newerror.CodeResourceNotFound, "The Group Is Not Exist", fmt.Errorf("Try To Send Message To Unjoin Group"), newerror.LevelInfo)
@@ -499,8 +502,8 @@ func (m *MessageService) SendGroupNotice(ctx context.Context, groupID int64, use
 		UserId:  userID,
 	}
 	GetMuteStatusResp, err := m.serviceClient.GroupService.GetMuteStatus(ctx, &GetMuteStatusReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return finalErr
 	}
 	if GetMuteStatusResp.IsMute {
 		muteReason := GetMuteStatusResp.MuteReason
@@ -515,20 +518,21 @@ func (m *MessageService) SendGroupNotice(ctx context.Context, groupID int64, use
 		UserId:  userID,
 	}
 	GetGroupUserIDResp, err := m.serviceClient.GroupService.GetGroupUserID(ctx, GetGroupUserIDReq)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return finalErr
 	}
 	userIDList := GetGroupUserIDResp.UserIdList
 	groupNoticeStruct := commonmodel.KafkaGroupNotice{
 		TraceID:        m.traceID,
 		SendTimeSecond: time.Now().Unix(),
 		GoalUserID:     userIDList,
+		Data:           map[string]any{"message": messageContent},
 		SessionID:      groupID,
 		MessageCode:    commonmodel.MessageCode_GroupNotice,
 	}
 	_, _, err = tool.SendKafkaGroupNotice(m.groupNoticeTopic, groupNoticeStruct)
-	if newerror.WhetherInterrupt(err, &finalErr) {
-		return err
+	if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
+		return finalErr
 	}
 	return finalErr
 }

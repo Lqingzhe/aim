@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type WebSockedHub struct {
+type WebSocketHub struct {
 	Client map[int64]map[string]*Client
 	Mu     sync.RWMutex
 }

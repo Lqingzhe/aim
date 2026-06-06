@@ -9,10 +9,10 @@ import (
 )
 
 type WebSocketStruct struct {
-	hub *model.WebSockedHub
+	hub *model.WebSocketHub
 }
 
-func NewWebSocket(hub *model.WebSockedHub) *WebSocketStruct {
+func NewWebSocket(hub *model.WebSocketHub) *WebSocketStruct {
 	return &WebSocketStruct{
 		hub: hub,
 	}

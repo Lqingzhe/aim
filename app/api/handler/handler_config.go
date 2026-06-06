@@ -15,7 +15,7 @@ type HandlerConfig struct {
 	tokenConfig       commonmodel.TokenConfig
 	serviceClient     model.ServiceClient
 	websocketUpgrader websocket.Upgrader
-	hub               *model.WebSockedHub
+	hub               *model.WebSocketHub
 	consumer          sarama.Consumer
 }
 
@@ -26,7 +26,7 @@ func NewHandlerConfig(snowNode *snowflake.Node, dbContext *model.DBContext, toke
 		tokenConfig:       tokenConfig,
 		serviceClient:     serviceClient,
 		websocketUpgrader: websocketUpgrader,
-		hub:               &model.WebSockedHub{Client: make(map[int64]map[string]*model.Client)},
+		hub:               &model.WebSocketHub{Client: make(map[int64]map[string]*model.Client)},
 		consumer:          consumer,
 	}
 }

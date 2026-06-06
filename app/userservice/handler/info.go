@@ -21,6 +21,7 @@ func (s *UserServiceImpl) GetUserInfo(ctx context.Context, req *kitexuserservice
 	userInfo, remarkList, err := serviceStruct.GetUserInfo(ctx)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "GetUserInfo")
 		return nil, err
 	}

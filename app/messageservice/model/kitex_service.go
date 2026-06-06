@@ -1,6 +1,7 @@
 package model
 
 import (
+	"aim/kitex_gen/kitexaiservice/kitexaiservice"
 	"aim/kitex_gen/kitexfileservice/kitexfileservice"
 	"aim/kitex_gen/kitexgroupservice/kitexgroupservice"
 )
@@ -8,5 +9,5 @@ import (
 type ServiceClient struct {
 	GroupService kitexgroupservice.Client
 	FileService  kitexfileservice.Client
-	//AiService    kitexaiservice.Client
+	AiService    kitexaiservice.Client
 }

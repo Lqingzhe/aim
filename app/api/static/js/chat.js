@@ -35,6 +35,7 @@ function bindAllButtons() {
     document.getElementById('btn-join-group').onclick = showJoinGroupModal;
     document.getElementById('btn-friend-apply-list').onclick = showFriendApplyList;
     document.getElementById('btn-group-apply-list').onclick = showGroupApplyListModal;
+    document.getElementById('btn-send-group-notice').onclick = showSendGroupNoticeModal;  // 新增
     document.getElementById('btn-remark').onclick = showRemarkModal;
     document.getElementById('btn-manage-admin').onclick = showManageAdminModal;
     document.getElementById('btn-kick-out').onclick = showKickOutModal;
@@ -47,7 +48,6 @@ function bindAllButtons() {
 
     console.log('所有按钮事件绑定完成');
 }
-
 function init() {
     console.log('初始化开始...');
 

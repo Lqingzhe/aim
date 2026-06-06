@@ -494,3 +494,53 @@ function showRemarkModal() {
         }
     };
 }
+// ============================================
+// 群通知功能
+// ============================================
+
+// 发送群通知
+function showSendGroupNoticeModal() {
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modal-body');
+    modalBody.innerHTML = `
+        <div style="margin-bottom:15px;">
+            <label style="display:block;margin-bottom:5px;font-weight:bold;">群ID</label>
+            <input type="text" id="notice-group-id" placeholder="请输入群ID" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="display:block;margin-bottom:5px;font-weight:bold;">群通知内容</label>
+            <textarea id="notice-content" rows="4" placeholder="请输入群通知内容" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;"></textarea>
+            <div style="font-size:12px;color:#9ca3af;margin-top:5px;">💡 提示：群主和管理员可发送群通知</div>
+        </div>
+        <button id="submit-send-notice" style="width:100%;padding:10px;background:#f59e0b;color:white;border:none;border-radius:6px;cursor:pointer;">发送群通知</button>
+    `;
+    document.getElementById('modal-title').textContent = '发送群通知';
+    modal.style.display = 'flex';
+
+    document.getElementById('submit-send-notice').onclick = async () => {
+        const groupId = document.getElementById('notice-group-id').value.trim();
+        const messageContent = document.getElementById('notice-content').value.trim();
+
+        if (!groupId) {
+            alert('请输入群ID');
+            return;
+        }
+
+        if (!messageContent) {
+            alert('请输入群通知内容');
+            return;
+        }
+
+        const result = await apiCall('POST', '/message/send-group-notice', {
+            group_id: groupId,
+            message_content: messageContent
+        });
+
+        if (result && result.code === 0) {
+            alert('群通知发送成功！');
+            modal.style.display = 'none';
+        } else {
+            alert('发送失败: ' + (result?.message || '未知错误'));
+        }
+    };
+}

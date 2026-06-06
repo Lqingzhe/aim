@@ -17,14 +17,14 @@ func AddSaltByByteLength(length int64) (string, error) {
 	saltBytes := make([]byte, length)
 	_, err := rand.Read(saltBytes)
 	if err != nil {
-		return "", newerror.MakeError(http.StatusInternalServerError, newerror.CodeInternalError, "Internal Service Error", fmt.Errorf("Add Salt Generation Failed: %v", err), newerror.LevelFatal)
+		return "", newerror.MakeError(http.StatusInternalServerError, newerror.CodeInternalError, "Internal Service Error", fmt.Errorf("Add Salt Generation Failed: %v", err), newerror.LevelError)
 	}
 	return hex.EncodeToString(saltBytes), nil
 }
 func TypeAssert[T any](input any) (output *T, err error) {
 	output, ok := input.(*T)
 	if !ok {
-		return nil, newerror.MakeError(http.StatusInternalServerError, newerror.CodeInternalError, "Internal Service Error", fmt.Errorf("Database Struct Type Error"), newerror.LevelFatal)
+		return nil, newerror.MakeError(http.StatusInternalServerError, newerror.CodeInternalError, "Internal Service Error", fmt.Errorf("Variable Type Assertion Error"), newerror.LevelError)
 	}
 	return output, nil
 }

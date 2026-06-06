@@ -11,22 +11,22 @@ import (
 )
 
 func (h *HandlerConfig) Consumer(logger *zap.Logger, poolLimit int64) {
-	logger = newlog.AddTraceID(logger, "-1")
+	logger2 := newlog.AddTraceID(logger, "-1")
 	ConsumerService := service.NewConsumerService(service.NewWebSocket(h.hub), h.serviceClient.MessageClient)
 	errPool := make(chan *newerror.Error, poolLimit)
 	taskPool := make(chan func(), poolLimit*2)
 
 	GroupNoticeTopic, err := h.consumer.ConsumePartition("group-notice-topic", 0, sarama.OffsetNewest)
 	if err != nil {
-		newlog.LogInitFatal(logger, err, "Init Consumer Error")
+		newlog.LogInitFatal(logger2, err, "Init Consumer Error")
 	}
 	MessageTopic, err := h.consumer.ConsumePartition("message-topic", 0, sarama.OffsetOldest)
 	if err != nil {
-		newlog.LogInitFatal(logger, err, "Init Consumer Error")
+		newlog.LogInitFatal(logger2, err, "Init Consumer Error")
 	}
 	SystemTopic, err := h.consumer.ConsumePartition("system-topic", 0, sarama.OffsetNewest)
 	if err != nil {
-		newlog.LogInitFatal(logger, err, "Init Consumer Error")
+		newlog.LogInitFatal(logger2, err, "Init Consumer Error")
 	}
 	go func() {
 		for {
@@ -56,7 +56,8 @@ func (h *HandlerConfig) Consumer(logger *zap.Logger, poolLimit int64) {
 			}
 			if msg != nil {
 				taskPool <- func() {
-					err2 := ConsumerService.Consumer(msg)
+					traceID, err2 := ConsumerService.Consumer(msg)
+					logger := newlog.AddTraceID(logger, traceID)
 					if err2 != nil {
 						select {
 						case errPool <- err2:
@@ -64,6 +65,7 @@ func (h *HandlerConfig) Consumer(logger *zap.Logger, poolLimit int64) {
 							newlog.Log(newlog.AddError(logger, fmt.Errorf("ErrorPool Full, Drop Error"), -1), newerror.LevelError, "Consumer")
 						}
 					}
+					newlog.Log(logger, newerror.LevelInfo, "Consumer")
 				}
 			}
 		}

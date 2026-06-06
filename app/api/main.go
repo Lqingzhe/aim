@@ -5,6 +5,7 @@ import (
 	"aim/app/api/config"
 	"aim/app/api/dao"
 	"aim/app/api/model"
+	"aim/kitex_gen/kitexaiservice/kitexaiservice"
 	"aim/kitex_gen/kitexfileservice/kitexfileservice"
 	"aim/kitex_gen/kitexgroupservice/kitexgroupservice"
 	"aim/kitex_gen/kitexmessageservice/kitexmessageservice"
@@ -54,6 +55,12 @@ func main() {
 		//client.WithHostPorts("127.0.0.1:8891"),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["message_service"].KitexTimeOut),
 	)
+	AiClient := kitexaiservice.MustNewClient(
+		"ai_service",
+		commonconfig.ResolverService(Config.NacosConfig, logger),
+		//client.WithHostPorts("127.0.0.1:8891"),
+		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["ai_service"].KitexTimeOut),
+	)
 
 	kafkaConfig := commonconfig.GetKafkaConsumerConfig()
 	consumer := commonconfig.MakeKafkaConsumer(Config.KafkaConfig.Broker, kafkaConfig, logger)
@@ -71,6 +78,7 @@ func main() {
 			GroupClient:   GroupClient,
 			FileClient:    FileClient,
 			MessageClient: MessageClient,
+			AiClient:      AiClient,
 		},
 		websocket.Upgrader{
 			ReadBufferSize:  Config.ReadBufferSize,

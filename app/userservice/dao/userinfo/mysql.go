@@ -36,7 +36,7 @@ func updateMysql(ctx context.Context, dbContext *model.DBContext, info *DaoUserI
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mysql:UpdateMysql")
-	result := dbContext.Mysql.Client.WithContext(ctx).Model(&model.UserInfo{}).Where("user_id = ?", info.UserInfo.UserID).Updates(info.UserInfo)
+	result := dbContext.Mysql.Client.WithContext(ctx).Model(&model.UserInfo{}).Where("user_id = ?", info.UserInfo.UserID).Save(info.UserInfo)
 	if result.Error == nil && result.RowsAffected == 0 {
 		return false, nil
 	}

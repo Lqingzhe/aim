@@ -6,7 +6,7 @@ func InitRedisScript() map[LuaOperate]*redis.Script {
 	newScript := make(map[LuaOperate]*redis.Script)
 	newScript[HSETEX] = redis.NewScript(HSETEXLua)
 	newScript[DELBLURRY] = redis.NewScript(DELBLURRYLua)
-
+	newScript[Limiter] = redis.NewScript(LimiterLua)
 	return newScript
 }
 
@@ -69,4 +69,10 @@ if #allKey>0 then
 	return result
 end
 return 0`
+)
+const (
+	Limiter    LuaOperate = "Limiter" //令牌桶
+	LimiterLua string     = `
+
+`
 )

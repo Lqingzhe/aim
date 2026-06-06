@@ -68,6 +68,12 @@ type FileConfig struct {
 	MaxFileKeepSize    int64  `yaml:"max_file_keep_size"`
 	MaxVoiceTimeSecond int64  `yaml:"max_voice_time_second"`
 }
+type AiConfig struct {
+	MaxThinkStep         int64         `yaml:"max_think_step"`
+	MaxMessageByteLength int64         `yaml:"max_message_byte_length"`
+	MaxChatTurns         int64         `yaml:"max_chat_turns"`
+	AiChatTimeout        time.Duration `yaml:"ai_chat_timeout"`
+}
 type KafkaConfig struct {
 	Broker []string `yaml:"broker"`
 }

@@ -165,6 +165,15 @@ func GetFileConfig(data []byte) commonmodel.FileConfig {
 	}
 	return newStruct.FileConfig
 }
+func GetAiConfig(data []byte) commonmodel.AiConfig {
+	newStruct := struct {
+		AiConfig commonmodel.AiConfig `yaml:"ai_config"`
+	}{}
+	if err := yaml.Unmarshal(data, &newStruct); err != nil {
+		log.Fatalf("Unmarshal AiConfig Failed: %v", err)
+	}
+	return newStruct.AiConfig
+}
 func GetKafkaConfig(data []byte) commonmodel.KafkaConfig {
 	newStruct := struct {
 		KafkaConfig commonmodel.KafkaConfig `yaml:"kafka_config"`

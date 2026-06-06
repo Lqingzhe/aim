@@ -140,6 +140,13 @@ func (A *ApiConfig) Begin(port string) {
 			message.POST("/get-file-content", middleware.SetTimeOut(A.RoutTimeOut["/message/get-file-content"]), handlerConfig.GetFileContent)
 			message.POST("/send-group-notice", middleware.SetTimeOut(A.RoutTimeOut["/message/send-group-notice"]), handlerConfig.SendGroupNotice)
 		}
+		ai := needLogin.Group("/ai")
+		{
+			ai.POST("/delete-chat-context", middleware.SetTimeOut(A.RoutTimeOut["/delete-chat-context"]), handlerConfig.DeleteChatContext)
+			ai.POST("/get-ai-config", middleware.SetTimeOut(A.RoutTimeOut["/get-ai-config"]), handlerConfig.GetAiConfig)
+			ai.POST("/update-ai-config", middleware.SetTimeOut(A.RoutTimeOut["/update-ai-config"]), handlerConfig.UpdateAiConfig)
+			ai.POST("/delete-ai-config", middleware.SetTimeOut(A.RoutTimeOut["/delete-ai-config"]), handlerConfig.DeleteAiConfig)
+		}
 	}
 	//路由注册
 

@@ -18,6 +18,7 @@ func (s *KitexMessageServiceImpl) SetOfflineMessage(ctx context.Context, req *ki
 	err = serviceStruct.SetOffLineMessage(ctx, req.GoalUserAndDeviceId, req.JsonData)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "SetOfflineMessage")
 		return nil, err2
 	}
@@ -35,6 +36,7 @@ func (s *KitexMessageServiceImpl) GetOfflineMessageList(ctx context.Context, req
 	jsondataList, exist, err := serviceStruct.GetOffLineMessageList(ctx, req.UserAndDeviceId)
 	if err != nil {
 		err2 := newerror.TranslateError(err)
+		logger = newlog.AddError(logger, err2, err2.StatusCode)
 		newlog.Log(logger, err2.LogLevel, "GetOfflineMessageList")
 		return nil, err2
 	}

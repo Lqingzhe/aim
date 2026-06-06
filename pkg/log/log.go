@@ -33,12 +33,8 @@ func AddError[t int | newerror.ErrorStatue](zapConfig *zap.Logger, err error, st
 func AddGateWayInfo(zapConfig *zap.Logger, httpStatue int, userID int64, ip string, operation string) *zap.Logger {
 	return zapConfig.With(zap.Int("http_code", httpStatue), zap.Int64("user_id", userID), zap.String("ip", ip), zap.String("operation", operation))
 } //用于在gateway的handler最后调用
-func AddServiceInfo(zapConfig *zap.Logger, errorCode newerror.ErrorStatue) *zap.Logger {
-	return zapConfig.With(zap.Int("error_code", int(errorCode)))
-} //用于在Service的handler最后调用
-
-func Log[t int8 | zapcore.Level](logger *zap.Logger, rawLogState t, message string) {
-	logState := zapcore.Level(rawLogState)
+func Log[t int8 | zapcore.Level](logger *zap.Logger, rawLogLevel t, message string) {
+	logState := zapcore.Level(rawLogLevel)
 	switch logState {
 	case zapcore.DebugLevel:
 		logger.Debug(message)

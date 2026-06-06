@@ -5,6 +5,7 @@ import (
 	"aim/app/messageservice/dao"
 	"aim/app/messageservice/handler"
 	"aim/app/messageservice/model"
+	"aim/kitex_gen/kitexaiservice/kitexaiservice"
 	"aim/kitex_gen/kitexfileservice/kitexfileservice"
 	"aim/kitex_gen/kitexgroupservice/kitexgroupservice"
 	"aim/kitex_gen/kitexmessageservice/kitexmessageservice"
@@ -42,10 +43,11 @@ func main() {
 		commonconfig.ResolverService(Config.NacosConfig, logger),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["file_service"].KitexTimeOut),
 	)
-	//aiClient := kitexaiservice.MustNewClient(
-	//	"ai_service",
-	//	commonconfig.ResolverService("ai_service", Config.CommonConfig.ServiceInfo, logger),
-	//)
+	aiClient := kitexaiservice.MustNewClient(
+		"ai_service",
+		commonconfig.ResolverService(Config.NacosConfig, logger),
+		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["ai_service"].KitexTimeOut),
+	)
 
 	kafkaProducerConfig := commonconfig.GetKafkaProducerConfig()
 	groupNoticeTopic := commonconfig.MakeKafkaProducer(Config.KafkaConfig.Broker, kafkaProducerConfig, logger)
@@ -66,7 +68,7 @@ func main() {
 			model.ServiceClient{
 				GroupService: groupClient,
 				FileService:  fileClient,
-				//AiService:    aiClient,
+				AiService:    aiClient,
 			},
 			newMessageTopic,
 			groupNoticeTopic,

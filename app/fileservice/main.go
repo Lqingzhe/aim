@@ -38,6 +38,7 @@ func main() {
 
 	svr := kitexfileservice.NewServer(
 		handler.NewFileServiceImpl(
+			logger,
 			Config.FileConfig,
 			snowNode,
 			dbContext,
