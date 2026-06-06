@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 type UserAiConfig struct {
@@ -48,7 +49,7 @@ func (u *UserAiConfig) UpdateAiConfig(ctx context.Context, userID int64, ModelNa
 	if ModelName == "" || BaseUrl == "" || ApiKey == "" || Role == "" || Prompt == "" {
 		return newerror.MakeError(http.StatusBadRequest, newerror.CodeMissingParam, "Lack Necessary Param", fmt.Errorf("Lack Necessary Ai Config"), newerror.LevelInfo)
 	}
-	_, err = agent.CreateAiAgent(ctx, ModelName, BaseUrl, ApiKey, nil, 0)
+	_, err = agent.CreateAiAgent(ctx, ModelName, BaseUrl, ApiKey, nil, 0, 20*time.Second)
 	if err != nil {
 		return err
 	}

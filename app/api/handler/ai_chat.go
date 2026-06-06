@@ -1,6 +1,5 @@
 package handler
 
-import "C"
 import (
 	"aim/kitex_gen/kitexaiservice"
 	"aim/kitex_gen/kitexcommonmodel"
@@ -36,7 +35,7 @@ func (h *HandlerConfig) DeleteChatContext(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"code":    http.StatusOK,
+		"code":    0,
 		"message": "Success",
 	})
 	if finalErr != nil {

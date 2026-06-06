@@ -38,8 +38,10 @@ func InitDB(mysqlConfig *commonmodel.MysqlConfig, mongoDBConfig *commonmodel.Mon
 		for {
 			select {
 			case err := <-ErrChan:
-				err2 := newerror.TranslateError(err)
-				newlog.Log(newlog.AddError(logger, err, err2.StatusCode), err2.LogLevel, "Database Error")
+				if err != nil {
+					err2 := newerror.TranslateError(err)
+					newlog.Log(newlog.AddError(logger, err, err2.StatusCode), err2.LogLevel, "Database Error")
+				}
 			}
 		}
 	}()

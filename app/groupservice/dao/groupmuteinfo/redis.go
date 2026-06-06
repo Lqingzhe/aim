@@ -49,10 +49,10 @@ func getRedis(ctx context.Context, dbContext *model.DBContext, info *MuteInfo) (
 		return false, newerror.MakeError(http.StatusInternalServerError, newerror.CodeCacheError, "Success", err, newerror.LevelWarn, newerror.WithContinueError)
 	}
 	t2 := time.Unix(t1, 0)
-	info.Info[0] = &model.GroupMuteInfo{
+	info.Info = append(info.Info, &model.GroupMuteInfo{
 		MuteEndTime: t2,
 		MuteReason:  result["mute_reason"],
-	}
+	})
 	return true, nil
 }
 func deleteRedis(ctx context.Context, dbContext *model.DBContext, info *MuteInfo) (err error) {

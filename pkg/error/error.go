@@ -99,7 +99,7 @@ func TranslateError(err error) *Error {
 	var err2 *Error
 	err2, ok := errors.AsType[*Error](err)
 	if !ok {
-		return MakeError(http.StatusInternalServerError, CodeInternalError, "Type Assertion Error", fmt.Errorf("%s%w", `Type Assertion To "*newerror.Error" Error`, err), LevelFatal).AddErrorTrace("error:TranslateError").(*Error)
+		return MakeError(http.StatusInternalServerError, CodeInternalError, "Type Assertion Error", fmt.Errorf("%s%w", `Type Assertion To "*newerror.Error" Error`, err), LevelError).AddErrorTrace("error:TranslateError").(*Error)
 	}
 	return err2
 }

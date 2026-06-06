@@ -46,9 +46,10 @@ func (h *HandlerConfig) Consumer(logger *zap.Logger, poolLimit int64) {
 			}
 		}()
 	}
-	var msg *sarama.ConsumerMessage
+
 	go func() {
 		for {
+			var msg *sarama.ConsumerMessage
 			select {
 			case msg = <-GroupNoticeTopic.Messages():
 			case msg = <-MessageTopic.Messages():
@@ -65,6 +66,7 @@ func (h *HandlerConfig) Consumer(logger *zap.Logger, poolLimit int64) {
 							newlog.Log(newlog.AddError(logger, fmt.Errorf("ErrorPool Full, Drop Error"), -1), newerror.LevelError, "Consumer")
 						}
 					}
+					logger = logger.With(zap.String("message_content", string(msg.Value)))
 					newlog.Log(logger, newerror.LevelInfo, "Consumer")
 				}
 			}

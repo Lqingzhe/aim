@@ -4,6 +4,7 @@ import (
 	myagent "aim/app/aiservice/agent"
 	"aim/app/aiservice/model"
 	"aim/commonmodel"
+
 	"github.com/IBM/sarama"
 	agenttool "github.com/cloudwego/eino/components/tool"
 	"go.uber.org/zap"

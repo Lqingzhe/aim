@@ -157,7 +157,7 @@ func (m *MessageService) SendMessage(ctx context.Context, groupID int64, userID 
 			Message:    aiMessage,
 		}
 		_, err = m.serviceClient.AiService.SendMessageToAi(ctx, &sendMessageToAiReq)
-		if newerror.WhetherInterrupt(err, &finalErr) {
+		if newerror.WhetherInterrupt(newerror.UnMarshalError(err), &finalErr) {
 			return 0, err
 		}
 	}

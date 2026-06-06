@@ -142,10 +142,10 @@ func (A *ApiConfig) Begin(port string) {
 		}
 		ai := needLogin.Group("/ai")
 		{
-			ai.POST("/delete-chat-context", middleware.SetTimeOut(A.RoutTimeOut["/delete-chat-context"]), handlerConfig.DeleteChatContext)
-			ai.POST("/get-ai-config", middleware.SetTimeOut(A.RoutTimeOut["/get-ai-config"]), handlerConfig.GetAiConfig)
-			ai.POST("/update-ai-config", middleware.SetTimeOut(A.RoutTimeOut["/update-ai-config"]), handlerConfig.UpdateAiConfig)
-			ai.POST("/delete-ai-config", middleware.SetTimeOut(A.RoutTimeOut["/delete-ai-config"]), handlerConfig.DeleteAiConfig)
+			ai.POST("/delete-chat-context", middleware.SetTimeOut(A.RoutTimeOut["/ai/delete-chat-context"]), handlerConfig.DeleteChatContext)
+			ai.POST("/get-ai-config", middleware.SetTimeOut(A.RoutTimeOut["/ai/get-ai-config"]), handlerConfig.GetAiConfig)
+			ai.POST("/update-ai-config", middleware.SetTimeOut(A.RoutTimeOut["/ai/update-ai-config"]), handlerConfig.UpdateAiConfig)
+			ai.POST("/delete-ai-config", middleware.SetTimeOut(A.RoutTimeOut["/ai/delete-ai-config"]), handlerConfig.DeleteAiConfig)
 		}
 	}
 	//路由注册

@@ -106,8 +106,10 @@ func (a *AiChat) SendMessageToUser(ctx context.Context, msg *sarama.ConsumerMess
 			MessageContent: "@" + strconv.FormatInt(data.UserID, 10) + " " + message,
 			IsAi:           true,
 		}
-		_, err = a.serviceClient.MessageService.SendMessage(ctx, &sendMessageReq)
-		err = newerror.UnMarshalError(err)
+		_, err2 := a.serviceClient.MessageService.SendMessage(ctx, &sendMessageReq)
+		if newerror.WhetherInterrupt(newerror.UnMarshalError(err2), &finalErr) {
+			err = finalErr
+		}
 	}()
 	a.TraceWithUserManager.SetTraceID(data.UserID, traceID)
 	defer a.TraceWithUserManager.ReleaseTrace(data.UserID)
@@ -122,13 +124,13 @@ func (a *AiChat) SendMessageToUser(ctx context.Context, msg *sarama.ConsumerMess
 		message = "You Did Not Have Ai Chat Config"
 		return data.TraceID, newerror.MakeError(http.StatusNotFound, newerror.CodeResourceNotFound, "You Did Not Have Ai Chat Config", fmt.Errorf("Try To Use Ai Chat Without Set Config"), newerror.LevelInfo, newerror.WithContinueError)
 	}
-	Agent, err := myagent.CreateAiAgent(ctx, userAiConfigStruct.ModelName, userAiConfigStruct.BaseUrl, userAiConfigStruct.ApiKey, a.tools, int(a.aiConfig.MaxThinkStep))
+	Agent, err := myagent.CreateAiAgent(ctx, userAiConfigStruct.Info.ModelName, userAiConfigStruct.Info.BaseUrl, userAiConfigStruct.Info.ApiKey, a.tools, int(a.aiConfig.MaxThinkStep), a.aiConfig.AiChatTimeout)
 	if newerror.WhetherInterrupt(err, &finalErr) {
 		err2 := newerror.TranslateError(err)
 		message = err2.HttpMessage
 		return data.TraceID, finalErr
 	}
-	messageFormate := myagent.CreateFormate(userAiConfigStruct.Role, userAiConfigStruct.Prompt)
+	messageFormate := myagent.CreateFormate(userAiConfigStruct.Info.Role, userAiConfigStruct.Info.Prompt)
 	aiChatContextStruct := aichatcontext.NewStruct(data.UserID, 0, nil)
 	exist, err = dao.Get(ctx, aiChatContextStruct, a.dbContext)
 	if newerror.WhetherInterrupt(err, &finalErr) {
@@ -148,17 +150,20 @@ func (a *AiChat) SendMessageToUser(ctx context.Context, msg *sarama.ConsumerMess
 		message = err2.HttpMessage
 		return data.TraceID, finalErr
 	}
-	aiMessage, err := myagent.AgentGenerateChat(ctx, chatMessage, Agent, data.UserID)
+	aiMessage, err := myagent.AgentGenerateChat(ctx, chatMessage, Agent, data.UserID, data.GroupID)
 	if newerror.WhetherInterrupt(err, &finalErr) {
 		err2 := newerror.TranslateError(err)
 		message = err2.HttpMessage
 		return data.TraceID, finalErr
 	}
+	if aiMessage.Content == "" {
+		return data.TraceID, nil
+	}
 	message = aiMessage.Content
 	history, addByteLength := myagent.AddHistory(history, data.Message, aiMessage)
 
-	history, releaseByteLength := myagent.CleanHistory(int(a.aiConfig.MaxChatTurns), history, aiChatContextStruct.Info.SumByteLength+addByteLength, a.aiConfig.MaxMessageByteLength)
-	aiChatContextStruct = aichatcontext.NewStruct(data.UserID, aiChatContextStruct.Info.SumByteLength+addByteLength-releaseByteLength, myagent.TranslateContextToHistory(history))
+	history, byteLength := myagent.CleanHistory(int(a.aiConfig.MaxChatTurns), history, aiChatContextStruct.Info.SumByteLength+addByteLength, a.aiConfig.MaxMessageByteLength)
+	aiChatContextStruct = aichatcontext.NewStruct(data.UserID, byteLength, myagent.TranslateContextToHistory(history))
 	exist, err = dao.Update(ctx, aiChatContextStruct, a.dbContext)
 	if newerror.WhetherInterrupt(err, &finalErr) {
 		err2 := newerror.TranslateError(err)

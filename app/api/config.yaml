@@ -10,7 +10,9 @@ common_config:
       kitex_time_out: 5s
     file_service:
       kitex_time_out: 5s
-      service_addr:
+    ai_service:
+      kitex_time_out: 5s
+
   nacos_config:
     host: "127.0.0.1"
     port: 8848
@@ -67,6 +69,10 @@ gateway_config:
     /message/get-new-message: 10s
     /message/get-file-content: 30s
     /message/send-group-notice: 10s
+    /ai/delete-chat-context: 10s
+    /ai/get-ai-config: 15s
+    /ai/update-ai-config: 15s
+    /ai/delete-ai-config: 10s
 
 limiter_config:
   max_token: 100

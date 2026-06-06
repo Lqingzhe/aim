@@ -22,7 +22,6 @@ import (
 
 func main() {
 	Config := config.InitConfig()
-
 	logger := newlog.InitLog(Config.Service, Config.EquipID)
 	defer logger.Sync()
 
@@ -45,6 +44,10 @@ func main() {
 		//client.WithHostPorts("127.0.0.1:8891"),
 		client.WithRPCTimeout(Config.CommonConfig.ServiceInfo["message_service"].KitexTimeOut),
 	)
+	serviceClient := model.ServiceClient{
+		GroupService:   GroupClient,
+		MessageService: MessageClient,
+	}
 	kafkaProducerConfig := commonconfig.GetKafkaProducerConfig()
 	aiTopic := commonconfig.MakeKafkaProducer(Config.KafkaConfig.Broker, kafkaProducerConfig, logger)
 
@@ -52,7 +55,7 @@ func main() {
 	consumer := commonconfig.MakeKafkaConsumer(Config.KafkaConfig.Broker, kafkaConfig, logger)
 
 	TraceWithUserManager := agent.NewTraceWithUserManager()
-	tools := agent.InitTools(logger, TraceWithUserManager)
+	tools := agent.InitTools(logger, TraceWithUserManager, dbContext, serviceClient)
 
 	addr, err := net.ResolveTCPAddr("tcp", Config.ServiceConfig.ServiceAddr.Host+":"+strconv.FormatInt(Config.ServiceConfig.ServiceAddr.Port, 10))
 	if err != nil {
@@ -63,10 +66,7 @@ func main() {
 		aiTopic,
 		dbContext,
 		Config.AiConfig,
-		model.ServiceClient{
-			GroupService:   GroupClient,
-			MessageService: MessageClient,
-		},
+		serviceClient,
 		consumer,
 		TraceWithUserManager,
 		rate.NewLimiter(rate.Limit(Config.LimiterConfig.GenerateToken), int(Config.LimiterConfig.MaxToken)),

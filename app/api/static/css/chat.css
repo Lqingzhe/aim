@@ -408,3 +408,8 @@ body {
     border-radius: 50%;
     margin-left: 8px;
 }
+
+.action-buttons {
+    max-height: 200px;
+    overflow-y: auto;
+}

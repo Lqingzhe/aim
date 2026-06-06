@@ -6,6 +6,8 @@ common_config:
       kitex_time_out: 5s
     file_service:
       kitex_time_out: 5s
+    ai_service:
+      kitex_time_out: 5s
   nacos_config:
     host: "localhost"
     port: 8848

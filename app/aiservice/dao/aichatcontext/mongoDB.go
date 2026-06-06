@@ -16,7 +16,7 @@ func setMongo(ctx context.Context, dbContext *model.DBContext, info *AiChatConte
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("mongoDB:SetMongo")
 	collection := dbContext.MongoDB.Client.Database("aim").Collection("ai_chat_context")
-	_, err = collection.InsertOne(ctx, &info.MessageContext)
+	_, err = collection.ReplaceOne(ctx, bson.M{"_id": info.UserID}, &info.MessageContext)
 	if err != nil {
 		if isContext, err2 := newerror.IsContextError(err); isContext {
 			return err2

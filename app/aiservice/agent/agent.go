@@ -6,6 +6,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/cloudwego/eino-ext/components/model/openai"
 	"github.com/cloudwego/eino/components/prompt"
@@ -15,7 +16,7 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-func CreateAiAgent(ctx context.Context, ModelName string, BaseURL string, APIKey string, toolInfo []tool.BaseTool, maxStep int) (agent *react.Agent, err error) {
+func CreateAiAgent(ctx context.Context, ModelName string, BaseURL string, APIKey string, toolInfo []tool.BaseTool, maxStep int, Timeout time.Duration) (agent *react.Agent, err error) {
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("agent:CreateAiAgent")
@@ -23,26 +24,27 @@ func CreateAiAgent(ctx context.Context, ModelName string, BaseURL string, APIKey
 		Model:   ModelName,
 		BaseURL: BaseURL,
 		APIKey:  APIKey,
+		Timeout: Timeout,
 	})
 	if err != nil {
 		errMsg := err.Error()
 		switch {
 		case strings.Contains(errMsg, "no such host"):
-			return nil, newerror.MakeError(http.StatusServiceUnavailable, newerror.CodeServiceUnavailable, "The BaseURL Analyses Error, Please Try Again Later", err, newerror.LevelInfo)
+			return nil, newerror.MakeError(http.StatusServiceUnavailable, newerror.CodeServiceUnavailable, "The BaseURL Analyses Error, Please Try Again Later(1)", err, newerror.LevelInfo)
 		case strings.Contains(errMsg, "connection refused"):
-			return nil, newerror.MakeError(http.StatusServiceUnavailable, newerror.CodeServiceUnavailable, "Connect Error, Please Try Again Later", err, newerror.LevelInfo)
+			return nil, newerror.MakeError(http.StatusServiceUnavailable, newerror.CodeServiceUnavailable, "Connect Error, Please Try Again Later(2)", err, newerror.LevelInfo)
 		case strings.Contains(errMsg, "timeout"):
-			return nil, newerror.MakeError(http.StatusGatewayTimeout, newerror.CodeUpstreamTimeout, "AI Service Request Timeout, Please Try Again Later", err, newerror.LevelError)
+			return nil, newerror.MakeError(http.StatusGatewayTimeout, newerror.CodeUpstreamTimeout, "AI Service Request Timeout, Please Try Again Later(3)", err, newerror.LevelError)
 		case strings.Contains(errMsg, "API key"):
-			return nil, newerror.MakeError(http.StatusUnauthorized, newerror.CodeUnauthorized, "API Key Error", err, newerror.LevelInfo)
+			return nil, newerror.MakeError(http.StatusUnauthorized, newerror.CodeUnauthorized, "API Key Error(4)", err, newerror.LevelInfo)
 		case strings.Contains(errMsg, "model"):
-			return nil, newerror.MakeError(http.StatusBadRequest, newerror.CodeResourceNotFound, "AI Model Is Not Exist", err, newerror.LevelInfo)
+			return nil, newerror.MakeError(http.StatusBadRequest, newerror.CodeResourceNotFound, "AI Model Is Not Exist(5)", err, newerror.LevelInfo)
 		case strings.Contains(errMsg, "certificate"):
-			return nil, newerror.MakeError(http.StatusInternalServerError, newerror.CodeDependencyError, "AI Service SSL Certificate Error", err, newerror.LevelInfo)
+			return nil, newerror.MakeError(http.StatusInternalServerError, newerror.CodeDependencyError, "AI Service SSL Certificate Error(6)", err, newerror.LevelInfo)
 		case strings.Contains(errMsg, "rate limit"):
-			return nil, newerror.MakeError(http.StatusTooManyRequests, newerror.CodeRateLimitExceeded, "AI Service Rate Limit Exceeded, Please Try Again Later", err, newerror.LevelInfo)
+			return nil, newerror.MakeError(http.StatusTooManyRequests, newerror.CodeRateLimitExceeded, "AI Service Rate Limit Exceeded, Please Try Again Later(7)", err, newerror.LevelInfo)
 		default:
-			return nil, newerror.MakeError(http.StatusInternalServerError, newerror.CodeDependencyError, "AI Service Error", err, newerror.LevelWarn)
+			return nil, newerror.MakeError(http.StatusInternalServerError, newerror.CodeDependencyError, "AI Service Error(8)", err, newerror.LevelWarn)
 		}
 	}
 	agent, err = react.NewAgent(ctx, &react.AgentConfig{
@@ -92,7 +94,7 @@ func CreateMessage(ctx context.Context, formate *prompt.DefaultChatTemplate, use
 	}("agent:CreateMessage")
 	message, err = formate.Format(ctx, map[string]any{"user_message": userMessage, "chat_history": history})
 	if err != nil {
-		return nil, newerror.MakeError(-1, newerror.CodeInternalError, "Ai Service Error, Please Repeat Later", err, newerror.LevelWarn)
+		return nil, newerror.MakeError(-1, newerror.CodeInternalError, "Ai Service Error, Please Repeat Later(9)", err, newerror.LevelWarn)
 	}
 	return message, nil
 }
@@ -106,22 +108,23 @@ func CleanHistory(keepNumber int, history []*schema.Message, byteLength int64, m
 	}
 	var subByteLength int
 	remainLength := length
-	for remainLength <= remainLength && byteLength <= maxByteLength {
+	for (remainLength > keepNumber*2 || byteLength > maxByteLength) && remainLength >= 0 && byteLength >= 0 {
 		remainLength -= 2
-		subByteLength = len(history[length-subByteLength-1].Content) + len(history[length-subByteLength-2].Content)
+		subByteLength = len(history[length-remainLength-1].Content) + len(history[length-remainLength-2].Content)
 		byteLength -= int64(subByteLength)
 	}
 	history = history[length-remainLength:]
 	return history, byteLength
 }
-func AgentGenerateChat(ctx context.Context, message []*schema.Message, Agent *react.Agent, userID int64) (aiMessage *schema.Message, err error) {
+func AgentGenerateChat(ctx context.Context, message []*schema.Message, Agent *react.Agent, userID int64, groupID int64) (aiMessage *schema.Message, err error) {
 	defer func(trace string) {
 		err = newerror.TranslateError(err).AddErrorTrace(trace)
 	}("agent:AgentGenerateChat")
 	ctx = context.WithValue(ctx, "user_id", userID)
+	ctx = context.WithValue(ctx, "group_id", groupID)
 	aiMessage, err = Agent.Generate(ctx, message)
 	if err != nil {
-		return nil, newerror.MakeError(-1, newerror.CodeThirdPartyError, "Ai Service Error, Please Repeat Later", err, newerror.LevelWarn)
+		return nil, newerror.MakeError(-1, newerror.CodeThirdPartyError, "Ai Service Error, Please Repeat Later(10)", err, newerror.LevelWarn)
 	}
 	return aiMessage, nil
 }

@@ -25,7 +25,8 @@ func (s *AiServiceImpl) SendMessageToAi(ctx context.Context, req *kitexaiservice
 		newlog.Log(logger, err2.LogLevel, "SendMessageToAi")
 		return nil, err
 	}
-	return
+	newlog.Log(logger, newerror.LevelInfo, "SendMessageToAi")
+	return &kitexaiservice.SendMessageToAiResp{}, nil
 }
 func (s *AiServiceImpl) SendMessageToUser(poolLimit int64) {
 	logger2 := newlog.AddTraceID(s.logger, "-1")
@@ -55,13 +56,13 @@ func (s *AiServiceImpl) SendMessageToUser(poolLimit int64) {
 			}
 		}()
 	}
-	var msg *sarama.ConsumerMessage
 	go func() {
 		for {
+			var msg *sarama.ConsumerMessage
 			select {
 			case msg = <-aiChatTopic.Messages():
 			}
-			if msg == nil {
+			if msg != nil {
 				taskPool <- func() {
 					ctx, cancel := context.WithTimeout(context.Background(), s.aiConfig.AiChatTimeout)
 					traceID, err2 := serviceStruct.SendMessageToUser(ctx, msg)
@@ -72,9 +73,12 @@ func (s *AiServiceImpl) SendMessageToUser(poolLimit int64) {
 						default:
 							newlog.Log(newlog.AddError(logger, fmt.Errorf("ErrorPool Full, Drop Error"), -1), newerror.LevelError, "SendMessageToUser")
 						}
+						cancel()
+						return
 					}
 					cancel()
 					newlog.Log(logger, newerror.LevelInfo, "SendMessageToUser")
+					return
 				}
 			}
 		}

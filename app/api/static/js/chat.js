@@ -35,13 +35,15 @@ function bindAllButtons() {
     document.getElementById('btn-join-group').onclick = showJoinGroupModal;
     document.getElementById('btn-friend-apply-list').onclick = showFriendApplyList;
     document.getElementById('btn-group-apply-list').onclick = showGroupApplyListModal;
-    document.getElementById('btn-send-group-notice').onclick = showSendGroupNoticeModal;  // 新增
+    document.getElementById('btn-send-group-notice').onclick = showSendGroupNoticeModal;
     document.getElementById('btn-remark').onclick = showRemarkModal;
     document.getElementById('btn-manage-admin').onclick = showManageAdminModal;
     document.getElementById('btn-kick-out').onclick = showKickOutModal;
     document.getElementById('btn-transfer-owner').onclick = showTransferOwnerModal;
     document.getElementById('btn-set-mute').onclick = showSetMuteModal;
     document.getElementById('btn-release-mute').onclick = showReleaseMuteModal;
+    document.getElementById('btn-ai-config').onclick = showGetAIConfigModal;
+    document.getElementById('btn-clear-chat-context').onclick = showDeleteChatContextModal;
     document.getElementById('btn-refresh').onclick = refreshAll;
     document.getElementById('btn-withdraw-latest').onclick = withdrawLatestMessage;
     document.getElementById('btn-user-info').onclick = showUserInfoModal;

@@ -544,3 +544,151 @@ function showSendGroupNoticeModal() {
         }
     };
 }
+// ============================================
+// AI 配置功能
+// ============================================
+
+// 获取 AI 配置
+async function showGetAIConfigModal() {
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modal-body');
+
+    modalBody.innerHTML = '<div style="text-align:center;padding:20px;">加载中...</div>';
+    document.getElementById('modal-title').textContent = 'AI 配置';
+    modal.style.display = 'flex';
+
+    try {
+        const result = await apiCall('POST', '/ai/get-ai-config', {});
+        console.log('get-ai-config 返回:', result);
+
+        if (result && result.code === 0 && result.data?.ai_config) {
+            const config = result.data.ai_config;
+            modalBody.innerHTML = `
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">模型名称</label>
+                    <input type="text" id="config-model-name" value="${escapeHtml(config.model_name || '')}" placeholder="如: gpt-4, qwen-max" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">API 地址</label>
+                    <input type="text" id="config-base-url" value="${escapeHtml(config.base_url || '')}" placeholder="https://api.openai.com/v1" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">API Key</label>
+                    <input type="password" id="config-api-key" value="${escapeHtml(config.api_key || '')}" placeholder="sk-xxx" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">角色设定</label>
+                    <input type="text" id="config-role" value="${escapeHtml(config.role || '')}" placeholder="如: 助手、编程专家" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">系统提示词</label>
+                    <textarea id="config-prompt" rows="3" placeholder="你是一个有帮助的助手..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">${escapeHtml(config.prompt || '')}</textarea>
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <button id="update-ai-config" style="flex:1;padding:10px;background:#10b981;color:white;border:none;border-radius:6px;cursor:pointer;">保存配置</button>
+                    <button id="delete-ai-config" style="flex:1;padding:10px;background:#ef4444;color:white;border:none;border-radius:6px;cursor:pointer;">删除配置</button>
+                </div>
+            `;
+
+            document.getElementById('update-ai-config').onclick = async () => {
+                const updateData = {
+                    model_name: document.getElementById('config-model-name')?.value || '',
+                    base_url: document.getElementById('config-base-url')?.value || '',
+                    api_key: document.getElementById('config-api-key')?.value || '',
+                    role: document.getElementById('config-role')?.value || '',
+                    prompt: document.getElementById('config-prompt')?.value || ''
+                };
+
+                if (!updateData.model_name || !updateData.base_url || !updateData.api_key) {
+                    alert('请填写模型名称、API地址和API Key');
+                    return;
+                }
+
+                const result = await apiCall('POST', '/ai/update-ai-config', updateData);
+                if (result && result.code === 0) {
+                    alert('AI配置保存成功！');
+                    modal.style.display = 'none';
+                } else {
+                    alert('保存失败: ' + (result?.message || '未知错误'));
+                }
+            };
+
+            document.getElementById('delete-ai-config').onclick = async () => {
+                if (confirm('确定要删除AI配置吗？删除后将无法使用AI功能。')) {
+                    const result = await apiCall('POST', '/ai/delete-ai-config', {});
+                    if (result && result.code === 0) {
+                        alert('AI配置已删除');
+                        modal.style.display = 'none';
+                    } else {
+                        alert('删除失败: ' + (result?.message || '未知错误'));
+                    }
+                }
+            };
+        } else {
+            // 没有配置，显示创建表单
+            modalBody.innerHTML = `
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">模型名称</label>
+                    <input type="text" id="config-model-name" placeholder="如: gpt-4, qwen-max" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">API 地址</label>
+                    <input type="text" id="config-base-url" placeholder="https://api.openai.com/v1" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">API Key</label>
+                    <input type="password" id="config-api-key" placeholder="sk-xxx" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">角色设定</label>
+                    <input type="text" id="config-role" placeholder="如: 助手、编程专家" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">系统提示词</label>
+                    <textarea id="config-prompt" rows="3" placeholder="你是一个有帮助的助手..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;"></textarea>
+                </div>
+                <button id="create-ai-config" style="width:100%;padding:10px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;">创建配置</button>
+            `;
+
+            document.getElementById('create-ai-config').onclick = async () => {
+                const updateData = {
+                    model_name: document.getElementById('config-model-name')?.value || '',
+                    base_url: document.getElementById('config-base-url')?.value || '',
+                    api_key: document.getElementById('config-api-key')?.value || '',
+                    role: document.getElementById('config-role')?.value || '',
+                    prompt: document.getElementById('config-prompt')?.value || ''
+                };
+
+                if (!updateData.model_name || !updateData.base_url || !updateData.api_key) {
+                    alert('请填写模型名称、API地址和API Key');
+                    return;
+                }
+
+                const result = await apiCall('POST', '/ai/update-ai-config', updateData);
+                if (result && result.code === 0) {
+                    alert('AI配置创建成功！');
+                    modal.style.display = 'none';
+                } else {
+                    alert('创建失败: ' + (result?.message || '未知错误'));
+                }
+            };
+        }
+    } catch (error) {
+        console.error('获取AI配置异常:', error);
+        modalBody.innerHTML = `<div style="color:red;">网络错误</div>
+            <button id="close-modal" style="margin-top:10px;padding:8px 16px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;">关闭</button>`;
+        document.getElementById('close-modal').onclick = () => modal.style.display = 'none';
+    }
+}
+
+// 删除聊天上下文
+async function showDeleteChatContextModal() {
+    if (confirm('确定要删除AI对话历史记录吗？此操作不可恢复！')) {
+        const result = await apiCall('POST', '/ai/delete-chat-context', {});
+        if (result && result.code === 0) {
+            alert('对话历史已删除');
+        } else {
+            alert('删除失败: ' + (result?.message || '未知错误'));
+        }
+    }
+}

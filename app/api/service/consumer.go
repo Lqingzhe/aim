@@ -88,7 +88,7 @@ func (c *Consumer) Consumer(msg *sarama.ConsumerMessage) (traceID string, err *n
 		defer cancel()
 		_, err2 := c.MessageClient.SetOfflineMessage(ctx, &setOfflineMessageReq)
 		if err2 != nil {
-			if a, err := newerror.IsContextError(err2); a {
+			if a, err := newerror.IsContextError(newerror.UnMarshalError(err2)); a {
 				return traceID, err
 			}
 			err = newerror.TranslateError(err2)
