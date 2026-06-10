@@ -1,4 +1,4 @@
-package commondao
+package dao
 
 import (
 	"context"
@@ -6,47 +6,38 @@ import (
 	"time"
 )
 
-type entry struct {
+type entry[dataModel any] struct {
 	mu      sync.RWMutex
 	loading bool
 	ready   chan struct{}
-	value   any
+	value   *dataModel
 	epoch   int64
 }
 
-type L1Cache struct {
-	items map[string]*entry
-	mapMu       sync.RWMutex
-	globalEpoch int64
+type Cache[dataModel any] struct {
+	items map[string]*entry[dataModel]
+	mapMu sync.RWMutex
+	epoch int64
 }
-type DBContext interface {
-	GetDBContext(string) any
+
+func NewCache[dataModel any]() *Cache[dataModel] {
+	return &Cache[dataModel]{
+		items: make(map[string]*entry[dataModel]),
+	}
 }
-type Info interface {
+
+type DBContextInterface[Context any] interface {
+	GetClient() *Context
+}
+type Info[dataModel any] interface {
 	GetKey() string
-	SetInfo(any)
-	SetGetinfo(any)
+	GetEmptyValue() *dataModel
+	SetInfo(*dataModel)
 	WhetherExist() bool
-	GetEmptyValue() any
 }
 
-func NewL1Cache() *L1Cache {
-	return &L1Cache{
-		items: make(map[string]*entry),
-	}
-}
-
-func DeleteCache(c *L1Cache, key string, epoch int64) {
-	time.Sleep(1 * time.Second)
-	c.mapMu.Lock()
-	if c.items[key].epoch == epoch {
-		delete(c.items, key)
-	}
-	c.mapMu.Unlock()
-}
-func Get[I Info, D DBContext, rawInfo any](ctx context.Context, c *L1Cache, dbContext D, info I, getCache func(context.Context, D, I) (rawInfo, bool, error), setCache func(context.Context, D, I) error, getDB func(context.Context, D, I) (rawInfo, bool, error)) (bool, error) {
-
-	value, exist, err := getCache(ctx, dbContext, info)
+func Get[dataModel any, dbContextModel any](ctx context.Context, c *Cache[dataModel], DBContext DBContextInterface[dbContextModel], info Info[dataModel], getCache func(context.Context, DBContextInterface[dbContextModel], Info[dataModel]) (*dataModel, bool, error), setCache func(context.Context, DBContextInterface[dbContextModel], Info[dataModel]) error, getDB func(context.Context, DBContextInterface[dbContextModel], Info[dataModel]) (*dataModel, bool, error)) (bool, error) {
+	value, exist, err := getCache(ctx, DBContext, info)
 	if !exist || err != nil {
 		c.mapMu.RLock()
 		k, ok := c.items[info.GetKey()]
@@ -55,8 +46,8 @@ func Get[I Info, D DBContext, rawInfo any](ctx context.Context, c *L1Cache, dbCo
 			k.mu.RLock()
 			if !k.loading {
 				defer k.mu.RUnlock()
-				info.SetGetinfo(k.value)
-				return info.WhetherExist(), nil
+				info.SetInfo(k.value)
+				return info.WhetherExist(), err
 			} else {
 				k.mu.RUnlock()
 				select {
@@ -66,28 +57,35 @@ func Get[I Info, D DBContext, rawInfo any](ctx context.Context, c *L1Cache, dbCo
 				}
 				k.mu.RLock()
 				defer k.mu.RUnlock()
-				info.SetGetinfo(k.value)
+				info.SetInfo(k.value)
 				return info.WhetherExist(), err
 			}
 		} else {
 			c.mapMu.Lock()
-			c.globalEpoch++
-			c.items[info.GetKey()] = &entry{
+			k, ok = c.items[info.GetKey()]
+			if ok {
+				c.mapMu.Unlock()
+				info.SetInfo(k.value)
+				return info.WhetherExist(), err
+			}
+			c.epoch++
+			c.items[info.GetKey()] = &entry[dataModel]{
 				ready:   make(chan struct{}),
 				loading: true,
-				epoch:   c.globalEpoch,
+				epoch:   c.epoch,
 			}
 			c.mapMu.Unlock()
 			c.mapMu.RLock()
 			k, _ = c.items[info.GetKey()]
 			c.mapMu.RUnlock()
-			value, exist, err = getDB(ctx, dbContext, info)
+			var err2 error
+			value, exist, err2 = getDB(ctx, DBContext, info)
 			k.mu.Lock()
-			if err != nil {
+			if err2 != nil {
 				k.loading = false
 				close(k.ready)
 				k.mu.Unlock()
-				return false, err
+				return false, err2
 			}
 			if exist {
 				k.value = value
@@ -98,14 +96,28 @@ func Get[I Info, D DBContext, rawInfo any](ctx context.Context, c *L1Cache, dbCo
 			close(k.ready)
 			k.mu.Unlock()
 			info.SetInfo(value)
-			err2 := setCache(ctx, dbContext, info)
+			err2 = setCache(ctx, DBContext, info)
 			if err2 != nil {
 				return false, err2
 			}
+			k.mu.RLock()
 			go DeleteCache(c, info.GetKey(), c.items[info.GetKey()].epoch)
+			k.mu.RUnlock()
 			return exist, err
 		}
 	}
-	info.SetGetinfo(value)
+	info.SetInfo(value)
 	return info.WhetherExist(), nil
+}
+
+func DeleteCache[dataModel any](c *Cache[dataModel], key string, epoch int64) {
+	time.Sleep(1 * time.Second)
+	c.mapMu.Lock()
+	info, ok := c.items[key]
+	if ok && info != nil {
+		if info.epoch == epoch {
+			delete(c.items, key)
+		}
+	}
+	c.mapMu.Unlock()
 }
