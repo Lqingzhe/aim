@@ -1,0 +1,48 @@
+common_config:
+  service: "ai-service"
+  equip_id: 6
+  service_info:
+    message_service:
+      kitex_time_out: 20s
+    group_service:
+      kitex_time_out: 5s
+  nacos_config:
+    host: "127.0.0.1"
+    port: 8848
+
+
+service_config:
+  timeout: 10s
+  service_addr:
+    host: "127.0.0.1"
+    port: 8893
+
+ai_config:
+  max_think_step: 15
+  max_message_byte_length: 10240
+  max_chat_turns: 10
+  ai_chat_timeout: 1m
+
+kafka_config:
+  broker:
+    - "localhost:9092"
+
+mysql_config:
+  username: "root"
+  password: "123456"
+  host: "127.0.0.1"
+  port: 3306
+  dbname: "aim_ai"
+  set_max_idle_conns: 10
+  set_max_open_conns: 100
+  set_conn_max_lifetime: 3600s
+  timeout: 10s
+  read_timeout: 30s
+  write_timeout: 30s
+
+mongo_db_config:
+  url: "mongodb://root:123456@localhost:27017/?authSource=admin"
+
+limiter_config:
+  max_token: 100000
+  generate_token: 5000

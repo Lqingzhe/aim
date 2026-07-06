@@ -1,0 +1,10 @@
+撤回时调用fileService的Delete
+接收文件时从前端获取的ContentType就是fileService需要的ContentType，调用fileService的Create
+
+err判断因为涉及到缓存，全部使用newerror.WhetherInterrupt
+message:
+    1.   发送消息，确认是群成员，保存数据，广播groupMessage
+    2.   发送文件，检验文章信息，确认是群成员，保存数据，广播groupMessage
+    3.   发送语言，检验语言长度（从前端获取），确认是群成员，保存数据，
+dao:    :
+    1:   启动一个线程定期清理过期的或者已经消费结束的离线消息
